@@ -5,10 +5,10 @@ using OpenQA.Selenium.Support.UI;
 using System;
 
 [TestFixture]
-public class PensionetePaterhequraMobile
+public class LogimSiQytetarWEB
 {
     [Test]
-    public void KryejAplikim()
+    public void NIDpaPension()
     {
         var options = new EdgeOptions();
         options.AddArgument("start-maximized");
@@ -24,7 +24,7 @@ public class PensionetePaterhequraMobile
             btn.Click();
 
             // Mbush fushat tekstuale
-            driver.FindElement(By.Id("Nid")).SendKeys("F60214024S");
+            driver.FindElement(By.Id("Nid")).SendKeys("J55728107R");
             driver.FindElement(By.Id("ServiceCode")).SendKeys("368");
             driver.FindElement(By.Id("MicroserviceName")).SendKeys("issh-ams");
             driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
@@ -35,17 +35,30 @@ public class PensionetePaterhequraMobile
             tipiProfilit.SelectByValue("Individual");
             IWebElement platformaDropdown = driver.FindElement(By.Id("Platform"));
             SelectElement platforma = new SelectElement(platformaDropdown);
-            platforma.SelectByValue("MOBILE");
+            platforma.SelectByValue("WEB");
             IWebElement loadService = driver.FindElement(By.ClassName("load-button"));
             loadService.Click();
+
             Thread.Sleep(3000);
 
             // krijo aplikim te ri 
             IWebElement AplikimRi = driver.FindElement(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div/div/div/div/div/div/div/h5"));
             AplikimRi.Click();
+
             Thread.Sleep(6000);
 
-            //Kontrollo informacionet qe shfaqen ne baze te kerkimit ne filter 
+            //Kontrollo se nderfaqa e pensioneve hapet si duhet
+            string NderfaqaPensionet = "Pensionet";
+            IWebElement NderfaqaPensionetElement = driver.FindElement(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/h4"));
+            Assert.That(NderfaqaPensionetElement.Displayed, "Nderfaqja 'Pensionet' nuk u shfaq siç pritej.");
+
+            Thread.Sleep(1000);
+            string tekstKerko = "Nuk ka të dhëna të pensionit!";
+            IWebElement testKerkoElement = driver.FindElement(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[2]"));
+            Assert.That(testKerkoElement.Displayed, "teksti 'Nuk ka të dhëna të pensionit!' nuk u shfaq siç pritej.");
+
+            Thread.Sleep(1000);
+
             Console.WriteLine("Testi përfundoi me sukses!");
         }
     }
