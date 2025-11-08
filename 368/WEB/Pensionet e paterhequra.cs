@@ -78,6 +78,9 @@ public class PensionetePaterhequra
     SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(
         By.Id(":r0:")));
             kerkofilter2.Clear();
+
+            Thread.Sleep(1000);
+
             kerkofilter2.SendKeys("7085");
 
             Thread.Sleep(1000);
