@@ -253,7 +253,7 @@ public class _13831_
     public void PikeKordinate()
     {
         string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
-        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div/div/div/div/div/div/button/div";
+        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div[2]/div/div/div/div/div/div[1]/div/div/div[2]";
 
         Log("Open website");
         driver.Navigate().GoToUrl("http://141.95.84.12:8080/");
@@ -285,8 +285,8 @@ public class _13831_
 
 
         Log("Assert Step 1 Title");
-        IWebElement step2Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/h4")));
-        Assert.That(step2Title.Text.Trim(), Is.EqualTo("INFORMACION MBI APLIKANTIN"));
+        IWebElement step1Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/h4")));
+        Assert.That(step1Title.Text.Trim(), Is.EqualTo("Informacion mbi aplikantin"));
         Thread.Sleep(4000);
 
         Log("Assert Te dhenat individuale");
@@ -345,7 +345,7 @@ public class _13831_
         driver.FindElement(By.Id("rugaZona")).SendKeys("test");
 
         Log("Kliko Vazhdo buton");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div/button[2]"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/button[2]"));
 
         Thread.Sleep(3000);
 
@@ -357,7 +357,7 @@ public class _13831_
         SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[2]/button[2]"));
 
         IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[1]/div/div/div[2]")));
-        Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutem ngarkoni dokumentin e kërkuar"));
+        Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutem ngarkoni dokumentin e kërkuar."));
 
         Log("Ngarko dok jo te sakte");
 

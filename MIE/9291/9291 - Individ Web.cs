@@ -165,7 +165,7 @@ qarku
                 IWebElement email = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("email")));
                 Assert.That(InputValue(email), Is.EqualTo("ketjona.mema@kreatx.com"));
 
-                IWebElement phoneNumber = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("nrCel")));
+                IWebElement phoneNumber = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("phoneNumber")));
                 Assert.That(InputValue(phoneNumber), Is.EqualTo("0676041404"));
 
                 Thread.Sleep(500);

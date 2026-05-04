@@ -381,13 +381,13 @@ public class _10099_
         IWebElement Emri = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("emri")));
         Assert.That(Emri.GetAttribute("value").Trim(), Is.EqualTo("Ketjona"));
 
-        IWebElement Atesia = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("atesiat")));
+        IWebElement Atesia = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("atesia")));
         Assert.That(Atesia.GetAttribute("value").Trim(), Is.EqualTo("Mersin"));
 
         IWebElement Mbiemri = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("mbiemri")));
         Assert.That(Mbiemri.GetAttribute("value").Trim(), Is.EqualTo("Mema"));
 
-        IWebElement Datelindja = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("datelindja")));
+        IWebElement Datelindja = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("datelindja")));
         Assert.That(Datelindja.GetAttribute("value").Trim(), Is.EqualTo("28.07.1995"));
 
 
@@ -437,10 +437,10 @@ public class _10099_
         Assert.That(NrLejesDrejtimit.GetAttribute("value").Trim(), Is.EqualTo("C2602087K-1"));
 
         IWebElement DataLeshimit = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("dtLeshimi")));    
-        Assert.That(DataLeshimit.Text.Trim(), Is.EqualTo("03.06.2022"));
+        Assert.That(DataLeshimit.GetAttribute("value").Trim(), Is.EqualTo("03.06.2022"));
 
         IWebElement DataSkadimit = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("dtVlefshmerie")));
-        Assert.That(DataSkadimit.Text.Trim(), Is.EqualTo("02.06.2032"));
+        Assert.That(DataSkadimit.GetAttribute("value").Trim(), Is.EqualTo("02.06.2032"));
 
         IWebElement Kategoria = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("kategorite")));
         Assert.That(Kategoria.GetAttribute("value").Trim(), Is.EqualTo("B"));

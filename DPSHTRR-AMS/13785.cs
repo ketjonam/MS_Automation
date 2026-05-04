@@ -453,7 +453,7 @@ public class _13785_
 
         IWebElement fileSizeError = wait.Until(
             ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Madhësia e dokumentit nuk duhet të jetë më shumë se {{maxSize}} MB 5MBr')]"))
+                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Madhësia e dokumentit nuk duhet të jetë më shumë se {{maxSize}} MB 5MB')]"))
         );
         Assert.That(fileSizeError.Displayed, Is.True);
         Assert.That(
@@ -463,7 +463,7 @@ public class _13785_
 
         IWebElement fileTypeError = wait.Until(
             ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Formati duhet të jetë: PDF"))
+                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Formati duhet të jetë:  PDF')]"))
         );
         Assert.That(fileTypeError.Displayed, Is.True);
         Assert.That(
@@ -504,10 +504,12 @@ public class _13785_
         MandatpagesaInput.SendKeys(Mandatpagesa);
 
         Log("Kliko checkbox");
-        SafeClick(By.Id("agreeCheck"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[3]/span"));
+
+        Thread.Sleep(500);
 
         Log("Kliko Vazhdo button");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[4]/button[2]"));
 
         Thread.Sleep(4000);
 
@@ -516,7 +518,7 @@ public class _13785_
         Assert.That(Step3Title.Text.Trim(), Is.EqualTo("KLAUZOLA DEKLARATIVE"));
 
         Log("Kliko checkbox");
-        SafeClick(By.Id("consentCheckbox"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[1]/div/div/span"));
 
 
 

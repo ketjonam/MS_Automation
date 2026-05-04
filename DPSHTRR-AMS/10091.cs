@@ -437,7 +437,7 @@ public class _10091_
 
         Log("Assert te dhenat e lejes se drejtimit");
         IWebElement Kategoria = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[1]/input")));
-        Assert.That(Kategoria.Text.Trim(), Is.EqualTo("B"));
+        Assert.That(Kategoria.GetAttribute("value").Trim(), Is.EqualTo("B"));
 
         IWebElement DataLeshimit = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[2]/input")));
         Assert.That(DataLeshimit.GetAttribute("value").Trim(), Is.EqualTo("03.06.2022"));

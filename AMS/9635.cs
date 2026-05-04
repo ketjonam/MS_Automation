@@ -5,6 +5,7 @@ using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -459,39 +460,39 @@ public class _9635_
         IWebElement Step4Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/h4")));
         Assert.That(Step4Title.Text.Trim(), Is.EqualTo("DOKUMENTACIONI"));
 
-        Log("Kliko Vazhdo buton pa ngarkuar dokumentin");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[3]/div/button[2]"));
+        Log("Kliko Dergo buton pa ngarkuar dokumentin");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[3]/div/button[2]"));
 
         IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[1]/div[1]/div/div[2]")));
-        Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutem ngarkoni dokumentin e kërkuar."));
+        Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutemi ngarkoni dokumentin e kërkuar."));
 
         Log("Ngarko dok jo te sakte");
 
-        string Diploma = @"C:\Users\Kreatx\Downloads\Kthim Alfis test(1).pdf";
-        string CV = @"C:\Users\Kreatx\Downloads\png-transparent-visual-studio-logo-vs-brand-3d-icon.png";
-        string GaranciaBankare = @"C:\Users\Kreatx\Downloads\E88.30_CheckPointVPN.msi";
+        string KopjeID = @"C:\Users\Kreatx\Downloads\Kthim Alfis test(1).pdf";
+        string Kerkesa = @"C:\Users\Kreatx\Downloads\png-transparent-visual-studio-logo-vs-brand-3d-icon.png";
+        string KonfirmimiShtetesise = @"C:\Users\Kreatx\Downloads\E88.30_CheckPointVPN.msi";
 
-        Assert.That(File.Exists(Diploma), Is.True, "File Diploma nuk ekziston.");
-        Assert.That(File.Exists(CV), Is.True, "File CV nuk ekziston.");
-        Assert.That(File.Exists(GaranciaBankare), Is.True, "File Garancia Bankare nuk ekziston.");
-
-        IWebElement DiplomaInputWrong = wait.Until(
+        Assert.That(File.Exists(KopjeID), Is.True, "File KopjeID nuk ekziston.");
+        Assert.That(File.Exists(Kerkesa), Is.True, "File Kerkesa nuk ekziston.");
+        Assert.That(File.Exists(KonfirmimiShtetesise), Is.True, "File Konfirmimi Shtetesise nuk ekziston.");  
+        
+        IWebElement kopjeIDInputWrong = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Diplomën')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Kopje të dokumentit të identifikimit')]/following::input[@type='file'][1]"))
         );
-        DiplomaInputWrong.SendKeys(Diploma);
+        kopjeIDInputWrong.SendKeys(KopjeID);
 
-        IWebElement CVInputWrong = wait.Until(
+        IWebElement KerkesaInputWrong = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'CV')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Kërkesë e shtetasit të huaj drejtuar Presidentit të Republikës')]/following::input[@type='file'][1]"))
         );
-        CVInputWrong.SendKeys(CV);
+        KerkesaInputWrong.SendKeys(Kerkesa);
 
-        IWebElement GaranciaInputWrong = wait.Until(
+        IWebElement KonfirmimiShtetesiseInputWrong = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'garanci bankare')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Premtimi nga autoriteti kompetent i vendit të shtetësisë tjetër, ose dokumenti në origjinal ku konfirmohet shtetësia tjetër')]/following::input[@type='file'][1]"))
         );
-        GaranciaInputWrong.SendKeys(GaranciaBankare);
+        KonfirmimiShtetesiseInputWrong.SendKeys(KonfirmimiShtetesise);
 
         Log("Assert uncorrect doc name");
         IWebElement fileDocNameError = wait.Until(
@@ -502,17 +503,6 @@ public class _9635_
         Assert.That(
             fileDocNameError.Text.Trim(),
             Does.Contain("Emri i dokumentit është i pavlefshëm")
-        );
-
-        Log("Assert uncorrect doc type");
-        IWebElement fileDocTypeError = wait.Until(
-            ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Formati duhet të jetë: ')]"))
-        );
-        Assert.That(fileDocTypeError.Displayed, Is.True);
-        Assert.That(
-            fileDocTypeError.Text.Trim(),
-            Does.Contain("Formati duhet të jetë:")
         );
 
         Log("Assert uncorrect doc size");
@@ -531,47 +521,69 @@ public class _9635_
         Thread.Sleep(1500);
 
         Log("Ngarko dok e sakte");
-        Diploma = @"C:\Users\Kreatx\Downloads\TEST.pdf";
-        CV = @"C:\Users\Kreatx\Downloads\TEST.pdf";
-        GaranciaBankare = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        KopjeID = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        Kerkesa = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        KonfirmimiShtetesise = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        string VertetimiRezidences = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        string VertetimiGjykates = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        string VertetimiProkurorise = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        string Fotografia = @"C:\Users\Kreatx\Downloads\TEST.pdf";
 
-        Assert.That(File.Exists(Diploma), Is.True, "File Diploma nuk ekziston.");
-        Assert.That(File.Exists(CV), Is.True, "File CV nuk ekziston.");
-        Assert.That(File.Exists(GaranciaBankare), Is.True, "File Garancia Bankare nuk ekziston.");
+        Assert.That(File.Exists(KopjeID), Is.True, "File KopjeID nuk ekziston.");
+        Assert.That(File.Exists(Kerkesa), Is.True, "File Kerkesa nuk ekziston.");
+        Assert.That(File.Exists(KonfirmimiShtetesise), Is.True, "File KonfirmimiShtetesise nuk ekziston.");
+        Assert.That(File.Exists(VertetimiRezidences), Is.True, "File VertetimiRezidences nuk ekziston.");
+        Assert.That(File.Exists(VertetimiGjykates), Is.True, "File VertetimiGjykates nuk ekziston.");
+        Assert.That(File.Exists(VertetimiProkurorise), Is.True, "File VertetimiProkurorise nuk ekziston.");
+        Assert.That(File.Exists(Fotografia), Is.True, "File Fotografia nuk ekziston.");
 
-        IWebElement DiplomaInput = wait.Until(
+        IWebElement KopjaIDInput = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Diplomën')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Kopje të dokumentit të identifikimit')]/following::input[@type='file'][1]"))
         );
-        DiplomaInput.SendKeys(Diploma);
+        KopjaIDInput.SendKeys(KopjeID);
 
-        IWebElement CVInput = wait.Until(
+        IWebElement KerkesaInput = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'CV')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Kërkesë e shtetasit të huaj drejtuar Presidentit të Republikës')]/following::input[@type='file'][1]"))
         );
-        CVInput.SendKeys(CV);
+        KerkesaInput.SendKeys(Kerkesa);
 
-        IWebElement GaranciaInput = wait.Until(
+        IWebElement KonfirmimiShtetesiseInput = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'garanci bankare')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Premtimi nga autoriteti kompetent i vendit të shtetësisë tjetër, ose dokumenti në origjinal ku konfirmohet shtetësia tjetër')]/following::input[@type='file'][1]"))
         );
-        GaranciaInput.SendKeys(GaranciaBankare);
+        KonfirmimiShtetesiseInput.SendKeys(KonfirmimiShtetesise);
+
+        IWebElement VertetimiRezidencesInput = wait.Until(
+            ExpectedConditions.ElementExists(
+                By.XPath("//div[contains(.,'Dokumenti që vërteton rezidencën, vendbanimin e tij në shtetin nga i cili është premtuar shtetësia tjetër')]/following::input[@type='file'][1]"))
+        );
+        VertetimiRezidencesInput.SendKeys(VertetimiRezidences);
+
+        IWebElement VertetimiGjykatesInput = wait.Until(
+            ExpectedConditions.ElementExists(
+                By.XPath("//div[contains(.,'Vërtetim i lëshuar nga Gjykata e rrethit')]/following::input[@type='file'][1]"))
+        );
+        VertetimiGjykatesInput.SendKeys(VertetimiGjykates);
+
+        IWebElement VertetimiProkuroriseInput = wait.Until(
+            ExpectedConditions.ElementExists(
+                By.XPath("//div[contains(.,'Vërtetim i lëshuar nga Prokuroria e rrethit')]/following::input[@type='file'][1]"))
+        );
+        VertetimiProkuroriseInput.SendKeys(VertetimiProkurorise);
+
+        IWebElement FotografiaInput = wait.Until(
+            ExpectedConditions.ElementExists(
+                By.XPath("//div[contains(.,'Fotografi e aplikantit')]/following::input[@type='file'][1]"))
+        );
+        FotografiaInput.SendKeys(Fotografia);
 
         Log("Kliko checkbox e autotirimit");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[2]/div/div[2]/div/span"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[3]/div[1]/span"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[3]/div[2]/span"));
 
-        Log("Kliko Vazhdo buton");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[3]/div/button[2]"));
-
-        Log("Assert Step5 Title ");
-        IWebElement Step5Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/h4")));
-        Assert.That(Step5Title.Text.Trim(), Is.EqualTo("DEKLARATË MBI USHTRIMIN E VEPRIMTARISË"));
-
-        Log("Ploteso checkbox e dekarates");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/form/div[1]/div/div/div[1]/span"));
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/form/div[1]/div/div/div[2]/span"));
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/form/div[2]/div/div/div[1]/span"));
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/form/div[2]/div/div/div[2]/span"));
+        Thread.Sleep(1500);
 
         Log("TEST PASSED");
     }

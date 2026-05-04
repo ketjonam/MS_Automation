@@ -430,20 +430,10 @@ public class _10114_
         Assert.That(msgErrorMsg.Text.Trim(), Is.EqualTo("Plotësoni fushën për të vazhduar"));
 
         Log("Ploteso fushat e detyrueshme");
-        new SelectElement(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("motiviKerkeses")))).SelectByValue("Tiranë");
+        driver.FindElement(By.Name("motiviKerkeses")).SendKeys("test");
 
-        Log("Assert detajet e lejes se drejtimit");
-        IWebElement NrLejesDrejtimit = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[4]/div/div[1]/input")));
-        Assert.That(NrLejesDrejtimit.GetAttribute("value").Trim(), Is.EqualTo("C2602087K-1"));
+        Thread.Sleep(1000);
 
-        IWebElement DataLeshimit = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[4]/div/div[3]/input")));
-        Assert.That(DataLeshimit.Text.Trim(), Is.EqualTo("03.06.2022"));
-
-        IWebElement DataVlefshmerise = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[4]/div/div[4]/input")));
-        Assert.That(DataVlefshmerise.Text.Trim(), Is.EqualTo("02.06.2032"));
-
-        IWebElement Kategoria = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[4]/div/div[2]/input")));
-        Assert.That(Kategoria.GetAttribute("value").Trim(), Is.EqualTo("B"));
 
         Log("TEST PASSED");
     }

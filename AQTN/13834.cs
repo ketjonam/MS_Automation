@@ -253,7 +253,7 @@ public class _13834_
     public void FotografiDixhitaleDokumentitTeknik()
     {
         string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
-        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div[2]/div/div/div/div/div/div[1]/div";
+        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div[2]/div/div/div/div/div/div[1]/div/div";
 
         Log("Open website");
         driver.Navigate().GoToUrl("http://141.95.84.12:8080/");
@@ -263,7 +263,7 @@ public class _13834_
 
         Log("Fill form");
         driver.FindElement(By.Id("Nid")).SendKeys("J55728107R");
-        driver.FindElement(By.Id("ServiceCode")).SendKeys("13833");
+        driver.FindElement(By.Id("ServiceCode")).SendKeys("13834");
         driver.FindElement(By.Id("MicroserviceName")).SendKeys("aqtn");
         driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
         driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
@@ -286,7 +286,7 @@ public class _13834_
 
         Log("Assert Step 1 Title");
         IWebElement step2Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div[1]/main/div[3]/div/div/div[2]/div/h4")));
-        Assert.That(step2Title.Text.Trim(), Is.EqualTo("INFORMACTION MBI APLIKANTIN"));
+        Assert.That(step2Title.Text.Trim(), Is.EqualTo("INFORMACION MBI APLIKANTIN"));
         Thread.Sleep(4000);
 
         Log("Assert Te dhenat individuale");

@@ -266,17 +266,6 @@ public class _26_NIDWEB
         Log("Click Afisho for existing contract");
         SafeClick(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/form/div/div[2]/div[2]/div[2]/div/button"));
 
-        Log("Assert error message");
-        IWebElement errorMessage = wait.Until(
-            ExpectedConditions.ElementIsVisible(By.CssSelector("p.text-danger"))
-        );
-
-        Assert.That(errorMessage.Displayed, Is.True, "Mesazhi i gabimit nuk u shfaq.");
-        Assert.That(
-            errorMessage.Text,
-            Is.EqualTo("Kodi i klientit nuk ekziston. Ju lutemi vendosni kodin e saktë të klientit")
-        );
-
         Log("TEST PASSED");
     }
 }

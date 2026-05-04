@@ -311,7 +311,7 @@ public class _13828_
         IWebElement Email = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("email")));
         Assert.That(Email.GetAttribute("value").Trim(), Is.EqualTo("ketjona.mema@kreatx.com"));
 
-        IWebElement PhoneNumber = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("nrTel")));
+        IWebElement PhoneNumber = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("nrTelCel")));
         Assert.That(PhoneNumber.GetAttribute("value").Trim(), Is.EqualTo("0676041404"));
 
         IWebElement Rrethi = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("rrethi")));
@@ -355,7 +355,7 @@ public class _13828_
         SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[2]/div[4]/div/button[2]"));
 
         IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[2]/div[3]/div/div[2]")));
-        Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutem ngarkoni dokumentin e kërkuar"));
+        Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutemi ngarkoni dokumentin e kërkuar."));
 
         Log("Ngarko dok jo te sakte");
 
@@ -382,7 +382,7 @@ public class _13828_
         Log("Hiq dokumentin jo te sakte");
         IWebElement removeButton = wait.Until(
             ExpectedConditions.ElementToBeClickable(
-                By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[1]/div/div/div/div[2]/div/div/div[3]/button"))
+                By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[2]/div[3]/div/div/div[2]/div/div/div[3]/button"))
         );
         removeButton.Click();
 
@@ -392,6 +392,8 @@ public class _13828_
                         By.XPath("//div[contains(.,'Vendndodhja në hartë')]/following::input[@type='file'][1]"))
                 );
         Vendodhja_ne_Harte = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+
+        Thread.Sleep(1000);
 
         Log("TEST PASSED");
     }

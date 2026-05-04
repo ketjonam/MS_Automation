@@ -404,7 +404,7 @@ public class _13786_
         IWebElement Qyteti = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("city")));
         Assert.That(Qyteti.GetAttribute("value").Trim(), Is.EqualTo("KAVAJË"));
 
-        IWebElement Bashkia = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("municipalityt")));
+        IWebElement Bashkia = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("municipality")));
         Assert.That(Bashkia.GetAttribute("value").Trim(), Is.EqualTo("KAVAJË"));
 
         IWebElement Tel = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("phoneNumber")));
@@ -461,11 +461,9 @@ public class _13786_
         FotokopjeInput.SendKeys(Fotokopje);
 
         Log("Kliko checkbox");
-        SafeClick(By.Id("agreeCheck"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[3]/span"));
 
-        Log("Kliko Vazhdo button");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
-
+        Thread.Sleep(1000);
 
         Log("TEST PASSED");
     }

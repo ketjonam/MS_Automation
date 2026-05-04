@@ -253,7 +253,7 @@ public class _12426_
     public void MarrjeFleteProjekti()
     {
         string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
-        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div/div/div/div/div/div/button/div";
+        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div[2]/div/div/div/div/div/div[1]/div/div/div[2]";
 
         Log("Open website");
         driver.Navigate().GoToUrl("http://141.95.84.12:8080/");

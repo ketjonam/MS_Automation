@@ -326,21 +326,22 @@ public class _13847_
         Thread.Sleep(3000);
 
         Log("Assert Step2 title");
-        IWebElement Step2Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/h4")));
+        IWebElement Step2Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div/h4")));
         Assert.That(Step2Title.Text.Trim(), Is.EqualTo("INFORMACION SPECIFIK MBI APLIKIMIN"));
 
-        Log("Kliko Vazhdo buton pa plotesuar fushat e detyrueshme");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[2]/div/button[2]"));
+        Thread.Sleep(500);
 
-        IWebElement RequiredError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/form/div[1]/div[1]/div")));
-        Assert.That(RequiredError.Text.Trim(), Is.EqualTo("Plotësoni fushën për të vazhduar"));
+        Log("Kliko Vazhdo buton pa plotesuar fushat e detyrueshme");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div/div[2]/div/button[2]"));
+
+        IWebElement RequiredError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div/form/div[3]/div/p")));
+        Assert.That(RequiredError.Text.Trim(), Is.EqualTo("Përzgjidhni një vlerë për të vazhduar"));
 
         Log("Ploteso fushat e detyrueshme");
-        driver.FindElement(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/form/div[1]/div[1]/input")).SendKeys("test");
-        driver.FindElement(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/form/div[2]/div[1]/label[3]/input")).Click();
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div/form/div[3]/div/div[2]/div[1]/div/input"));
 
         Log("Kliko Vazhdo buton");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[2]/div/button[2]"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div/div[2]/div/button[2]"));
 
         Thread.Sleep(3000);
 
@@ -348,8 +349,10 @@ public class _13847_
         IWebElement Step3Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/h4")));
         Assert.That(Step3Title.Text.Trim(), Is.EqualTo("DOKUMENTACIONI"));
 
+        Thread.Sleep(500);
+
         Log("Kliko Dergo buton pa ngarkuar dokumentin");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[2]/button[2]"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[2]/div/button[2]"));
 
         IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[1]/div/div[2]")));
         Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutem ngarkoni dokumentin e kërkuar."));
@@ -389,6 +392,9 @@ public class _13847_
                         By.XPath("//div[contains(.,'Vendndodhja në hartë')]/following::input[@type='file'][1]"))
                 );
         Vendodhja_ne_Harte = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+
+        Thread.Sleep(500);
+
 
         Log("TEST PASSED");
     }

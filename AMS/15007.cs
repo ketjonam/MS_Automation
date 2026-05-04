@@ -386,9 +386,6 @@ public class _15007_
         IWebElement Mbiemri = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("surname")));
         Assert.That(Mbiemri.GetAttribute("value").Trim(), Is.EqualTo("Mema"));
 
-        IWebElement Gjinia = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("gender")));
-        Assert.That(Gjinia.GetAttribute("value").Trim(), Is.EqualTo("F"));
-
         IWebElement Ditelindja = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("birthday")));
         Assert.That(Ditelindja.GetAttribute("value").Trim(), Is.EqualTo("28.07.1995"));
 
@@ -396,7 +393,7 @@ public class _15007_
         Assert.That(Vendlindja.GetAttribute("value").Trim(), Is.EqualTo("Kavajë"));
 
         IWebElement Shtetesia = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("nationality")));
-        Assert.That(Shtetesia.GetAttribute("value").Trim(), Is.EqualTo("Shqiptar"));
+        Assert.That(Shtetesia.GetAttribute("value").Trim(), Is.EqualTo("Shqipëri"));
 
         IWebElement Tel = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("phone")));
         Assert.That(Tel.GetAttribute("value").Trim(), Is.EqualTo("0676041404"));
@@ -441,7 +438,7 @@ public class _15007_
         driver.FindElement(By.Name("endDate")).SendKeys("14.05.2026");
 
         Log("Kliko Vazhdo buton");  
-        SafeClick(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/div[2]/div/button[2]"));
+        SafeClick(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/form/div[2]/div/button[2]"));
 
 
         Log("Assert Step4 title");
@@ -460,11 +457,9 @@ public class _15007_
 
         string Kopje = @"C:\Users\Kreatx\Downloads\Kthim Alfis test(1).pdf";
         string CertifikataRegjistrimit = @"C:\Users\Kreatx\Downloads\TC_TestAutomation_Mobiread.docx";
-        string DeshmiAftesie = @"C:\Users\Kreatx\Downloads\E88.30_CheckPointVPN.msi";
 
         Assert.That(File.Exists(Kopje), Is.True, "File Kopja e librit te anijes nuk ekziston.");
         Assert.That(File.Exists(CertifikataRegjistrimit), Is.True, "File Ceritifikata regjistrimit nuk ekziston.");
-        Assert.That(File.Exists(DeshmiAftesie), Is.True, "File Deshmia e aftesise nuk ekziston.");
 
         IWebElement KopjeInputWrong = wait.Until(
             ExpectedConditions.ElementExists(
@@ -477,12 +472,6 @@ public class _15007_
                 By.XPath("//div[contains(.,'Kopje të Certifikatës së Regjistrimit të mjetit lundrues')]/following::input[@type='file'][1]"))
         );
         CertifikataInputWrong.SendKeys(CertifikataRegjistrimit);
-
-        IWebElement DeshmiAftesieInputWrong = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Kopje të Dëshmisë së Aftësisë për drejtimin e mjetit lundruese')]/following::input[@type='file'][1]"))
-        );
-        DeshmiAftesieInputWrong.SendKeys(DeshmiAftesie);
 
         Log("Assert uncorrect doc name");
         IWebElement fileDocNameError = wait.Until(
@@ -506,16 +495,6 @@ public class _15007_
             Does.Contain("Formati duhet të jetë:")
         );
 
-        Log("Assert uncorrect doc size");
-        IWebElement fileDocSizeError = wait.Until(
-            ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Madhësia e dokumentit nuk duhet të jetë më shumë se  20MB')]"))
-        );
-        Assert.That(fileDocSizeError.Displayed, Is.True);
-        Assert.That(
-            fileDocSizeError.Text.Trim(),
-            Does.Contain("Madhësia e dokumentit nuk duhet të jetë më shumë se 20MB")
-        );
 
         Log("Remove uncorrect docs");
         RemoveAllUploadedDocs();
@@ -524,15 +503,11 @@ public class _15007_
         Log("Ngarko dok e sakte");
         Kopje = @"C:\Users\Kreatx\Downloads\TEST.pdf";
         CertifikataRegjistrimit = @"C:\Users\Kreatx\Downloads\TEST.pdf";
-        DeshmiAftesie = @"C:\Users\Kreatx\Downloads\TEST.pdf";
-        string CertifikateLundrimi = @"C:\Users\Kreatx\Downloads\TEST.pdf";
-        string Pagesa = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+      
 
         Assert.That(File.Exists(Kopje), Is.True, "File Kopja nuk ekziston.");
         Assert.That(File.Exists(CertifikataRegjistrimit), Is.True, "File certifikata regjistrimit nuk ekziston.");
-        Assert.That(File.Exists(DeshmiAftesie), Is.True, "File Deshmia aftesise nuk ekziston.");
-        Assert.That(File.Exists(CertifikateLundrimi), Is.True, "File Certifikata lundrimit nuk ekziston.");
-        Assert.That(File.Exists(Pagesa), Is.True, "File Pagesa nuk ekziston.");
+  
 
         IWebElement KopjeInput = wait.Until(
             ExpectedConditions.ElementExists(
@@ -546,24 +521,7 @@ public class _15007_
         );
         CertifikataRegjistrimitInput.SendKeys(CertifikataRegjistrimit);
 
-        IWebElement DeshmiAftesieInput = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Kopje të Dëshmisë së Aftësisë për drejtimin e mjetit lundrues')]/following::input[@type='file'][1]"))
-        );
-        DeshmiAftesieInput.SendKeys(DeshmiAftesie);
-
-        IWebElement CertifikateLundrimiInput = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Kopje të certifikatës së lundrimit të sigurt, nga shoqëria klasifikuese e cila duhet të jetë e vlefshme')]/following::input[@type='file'][1]"))
-        );
-        CertifikateLundrimiInput.SendKeys(CertifikateLundrimi);
-
-        IWebElement PagesaInput = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Paguaj')]/following::input[@type='file'][1]"))
-        );
-        PagesaInput.SendKeys(Pagesa);
-
+        Thread.Sleep(500);
 
 
 

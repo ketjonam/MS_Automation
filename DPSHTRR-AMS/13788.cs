@@ -380,7 +380,7 @@ public class _13788_
 
         Log("Assert error message");
         IWebElement errorMsg = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/form/div/div[1]/div/div")));
-        Assert.That(errorMsg.Text.Trim(), Is.EqualTo("Perzgjidhni një vlerë për të vazhduar"));
+        Assert.That(errorMsg.Text.Trim(), Is.EqualTo("Përzgjidhni një vlerë për të vazhduar"));
 
         Log("Zgjidh DPSHTRR nga dropdown");
         SelectByValueSafe(By.Id("drejtoriaRajonale"), "DPSHTRR, TIRANE");

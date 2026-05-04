@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
+using OpenQA.Selenium.BiDi.Input;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
@@ -412,13 +413,13 @@ public class _15128_
         Assert.That(Step2Title.Text.Trim(), Is.EqualTo("INFORMACION MBI PAJISJET MJEKËSORE"));
 
         Log("Kliko Vazhdo buton pa plotesuar fushat e detyrueshme");
-        SafeClick(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/div[2]/div[4]/div/button[2]"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[2]/div/button[2]"));
 
         IWebElement msgErrorApl = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/div[2]/div[2]/div/div")));
         Assert.That(msgErrorApl.Text.Trim(), Is.EqualTo("Ju nuk keni shtuar asnjë pajisje mjekësore."));
 
         Log("Ploteso fushat e detyrueshme");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[2]/div/button[2]"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[1]/div[1]/div/button[1]"));
 
         Thread.Sleep(2000);
         Log("Zgjidhni kategorine e pajisjes");
@@ -473,36 +474,36 @@ public class _15128_
         Log("Kliko Dergo buton pa ngarkuar dokumentin");
         SafeClick(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/div[3]/div[3]/div/button[2]"));
 
-        IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[1]/div[1]/div/div[2]")));
-        Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutem ngarkoni dokumentin e kërkuar."));
+        IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[3]/div[1]/div[2]/div[2]")));
+        Assert.That(msgError.Text.Trim(), Is.EqualTo("Plotësoni fushën për të vazhduar"));
 
         Log("Ngarko dok jo te sakte");
 
-        string LejeVeprimtarise = @"C:\Users\Kreatx\Downloads\Kthim Alfis test(1).pdf";
-        string Planimetria = @"C:\Users\Kreatx\Downloads\E88.30_CheckPointVPN.msi";
-        string VertetimiPageses = @"C:\Users\Kreatx\Downloads\TC_TestAutomation_Mobiread.docx";
+        string ManualPerdorimi = @"C:\Users\Kreatx\Downloads\Kthim Alfis test(1).pdf";
+        string DeklarateKonformiteti = @"C:\Users\Kreatx\Downloads\E88.30_CheckPointVPN.msi";
+        string SpecifikimetTeknike = @"C:\Users\Kreatx\Downloads\TC_TestAutomation_Mobiread.docx";
 
-        Assert.That(File.Exists(LejeVeprimtarise), Is.True, "File LejeVeprimtarise nuk ekziston.");
-        Assert.That(File.Exists(Planimetria), Is.True, "File Planimetria nuk ekziston.");
-        Assert.That(File.Exists(VertetimiPageses), Is.True, "File VertetimiPageses nuk ekziston.");
+        Assert.That(File.Exists(ManualPerdorimi), Is.True, "File ManualPerdorimi nuk ekziston.");
+        Assert.That(File.Exists(DeklarateKonformiteti), Is.True, "File DeklarateKonformiteti nuk ekziston.");
+        Assert.That(File.Exists(SpecifikimetTeknike), Is.True, "File SpecifikimetTeknike nuk ekziston.");
 
-        IWebElement LejeVeprimtariseInputWrong = wait.Until(
+        IWebElement ManualPerdorimiInputWrong = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Leje e veprimtarisë të lëshuar nga institucioni që mbulon veprimtarinë')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Manual përdorimi')]/following::input[@type='file'][1]"))
         );
-        LejeVeprimtariseInputWrong.SendKeys(LejeVeprimtarise);
+        ManualPerdorimiInputWrong.SendKeys(ManualPerdorimi);
 
-        IWebElement PlanimetriaInputWrong = wait.Until(
+        IWebElement DeklarateKonformitetiInputWrong = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Planimetrinë e sipërfaqes')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Deklaratë konformiteti')]/following::input[@type='file'][1]"))
         );
-        PlanimetriaInputWrong.SendKeys(Planimetria);
+        DeklarateKonformitetiInputWrong.SendKeys(DeklarateKonformiteti);
 
-        IWebElement VertetimiPagesesInputWrong = wait.Until(
+        IWebElement SpecifikimetTeknikeInputWrong = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Vërtetimin për pagesën')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Specifikimet teknike')]/following::input[@type='file'][1]"))
         );
-        VertetimiPagesesInputWrong.SendKeys(VertetimiPageses);
+        SpecifikimetTeknikeInputWrong.SendKeys(SpecifikimetTeknike);
 
         Log("Assert uncorrect doc name");
         IWebElement fileDocNameError = wait.Until(
@@ -518,23 +519,12 @@ public class _15128_
         Log("Assert uncorrect doc size");
         IWebElement fileDocSizeError = wait.Until(
             ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Madhësia e dokumentit nuk duhet të jetë më shumë se  20MB')]"))
+                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Madhësia e dokumentit nuk duhet të jetë më shumë se  5MB')]"))
         );
         Assert.That(fileDocSizeError.Displayed, Is.True);
         Assert.That(
             fileDocSizeError.Text.Trim(),
-            Does.Contain("Madhësia e dokumentit nuk duhet të jetë më shumë se 20MB")
-        );
-
-        Log("Assert uncorrect doc format");
-        IWebElement fileDocFormatError = wait.Until(
-            ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Formati duhet të jetë:  PDF, JPG, JPEG, PNG')]"))
-        );
-        Assert.That(fileDocFormatError.Displayed, Is.True);
-        Assert.That(
-            fileDocFormatError.Text.Trim(),
-            Does.Contain("Formati duhet të jetë: PDF, JPG, JPEG, PNG")
+            Does.Contain("Madhësia e dokumentit nuk duhet të jetë më shumë se 5MB")
         );
 
         Log("Remove uncorrect docs");
@@ -542,37 +532,41 @@ public class _15128_
         Thread.Sleep(1500);
 
         Log("Ngarko dok e sakte");
-        LejeVeprimtarise = @"C:\Users\Kreatx\Downloads\TEST.pdf";
-        Planimetria = @"C:\Users\Kreatx\Downloads\TEST.pdf";
-        VertetimiPageses = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        ManualPerdorimi = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        DeklarateKonformiteti = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        SpecifikimetTeknike = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        string ListaMaterialeve = @"C:\Users\Kreatx\Downloads\TEST.pdf";
 
-        Assert.That(File.Exists(LejeVeprimtarise), Is.True, "File Leje e veprimtarisë nuk ekziston.");
-        Assert.That(File.Exists(Planimetria), Is.True, "File Planimetria nuk ekziston.");
-        Assert.That(File.Exists(VertetimiPageses), Is.True, "File Vërtetimi për pagesën nuk ekziston.");
+        Assert.That(File.Exists(ManualPerdorimi), Is.True, "File Manuali i përdorimit nuk ekziston.");
+        Assert.That(File.Exists(DeklarateKonformiteti), Is.True, "File Deklaratë konformiteti nuk ekziston.");
+        Assert.That(File.Exists(SpecifikimetTeknike), Is.True, "File Specifikimet teknike nuk ekziston.");
+        Assert.That(File.Exists(ListaMaterialeve), Is.True, "File Lista e materialeve nuk ekziston.");
 
-        IWebElement LejeVeprimtariseInput = wait.Until(
+        IWebElement ManualPerdorimiInput = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Leje e veprimtarisë të lëshuar nga institucioni që mbulon veprimtarinë')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Manual përdorimi')]/following::input[@type='file'][1]"))
         );
-        LejeVeprimtariseInput.SendKeys(LejeVeprimtarise);
+        ManualPerdorimiInput.SendKeys(ManualPerdorimi);
 
-        IWebElement PlanimetriaInput = wait.Until(
+        IWebElement DeklarateKonformitetiInput = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Planimetrinë e sipërfaqes')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Deklaratë konformiteti')]/following::input[@type='file'][1]"))
         );
-        PlanimetriaInput.SendKeys(Planimetria);
+        DeklarateKonformitetiInput.SendKeys(DeklarateKonformiteti);
 
-        IWebElement VertetimiPagesesInput = wait.Until(
+        IWebElement SpecifikimetTeknikeInput = wait.Until(
             ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Vërtetimin për pagesën')]/following::input[@type='file'][1]"))
+                By.XPath("//div[contains(.,'Specifikimet teknike')]/following::input[@type='file'][1]"))
         );
-        VertetimiPagesesInput.SendKeys(VertetimiPageses);
+        SpecifikimetTeknikeInput.SendKeys(SpecifikimetTeknike);
 
-        Log("Kliko checkbox e autorizimit");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[3]/span"));
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[4]/span"));
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[5]/span"));
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[6]/span"));
+        IWebElement ListaMaterialeveInput = wait.Until(
+            ExpectedConditions.ElementExists(
+                By.XPath("//div[contains(.,'Lista e materialeve')]/following::input[@type='file'][1]"))
+        );
+        ListaMaterialeveInput.SendKeys(ListaMaterialeve);
+
+      Thread.Sleep(2000);
 
 
         Log("TEST PASSED");

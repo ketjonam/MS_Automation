@@ -482,11 +482,15 @@ public class _13559_
         );
         MandatpagesaInput.SendKeys(Mandatpagesa);
 
+        Thread.Sleep(2000);
+
         Log("Kliko Vazhdo buton");
-        SafeClick(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/div[2]/div[3]/div/button[2]"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[3]/div/button[2]"));
+
+        Thread.Sleep(3000);
 
         Log("Assert Step5 Title ");
-        IWebElement Step5Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/div[2]/h4")));
+        IWebElement Step5Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/h4")));
         Assert.That(Step5Title.Text.Trim(), Is.EqualTo("DEKLARATË MBI USHTRIMIN E VEPRIMTARISË"));
 
         Log("Ploteso checkbox e dekarates");

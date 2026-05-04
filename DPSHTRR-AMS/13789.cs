@@ -380,10 +380,10 @@ public class _13789_
 
         Log("Assert error message");
         IWebElement errorMsg = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[15]/div")));
-        Assert.That(errorMsg.Text.Trim(), Is.EqualTo("Perzgjidhni një vlerë për të vazhduar"));
+        Assert.That(errorMsg.Text.Trim(), Is.EqualTo("Përzgjidhni një vlerë për të vazhduar"));
 
         Log("Zgjidh DPSHTRR nga dropdown");
-        SelectByValueSafe(By.XPath("d/html/body/div/main/div[3]/div/div/div/div/form/div/div[15]/select"), "Tiranë");
+        SelectByValueSafe(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[15]/select"), "Tiranë");
 
         Log("Assert te dhenat e aplikantit");
         IWebElement NrIdentifikimit = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[4]/input")));
@@ -461,18 +461,20 @@ public class _13789_
         FotokopjeInput.SendKeys(Fotokopje);
 
         Log("kliko checkbox");
-        SafeClick(By.Id("agreeCheck"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[3]/span"));
+        Thread.Sleep(500);
 
         Log("Kliko Vazhdo button");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[4]/button[2]"));
 
         Log("Assert Step3 title");
         IWebElement Step3Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/h4")));
         Assert.That(Step3Title.Text.Trim(), Is.EqualTo("KLAUZOLA DEKLARATIVE"));
 
         Log("Kliko checkbox");
-        SafeClick(By.Id("consentCheckbox"));
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div[1]/div[2]/div/span"));
 
+        Thread.Sleep(500);
 
         Log("TEST PASSED");
     }
