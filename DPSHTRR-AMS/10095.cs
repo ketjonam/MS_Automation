@@ -400,6 +400,11 @@ public class _10095_
         Log("Zgjidh nivelin e arsimit");
         new SelectElement(wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[7]/select")))).SelectByValue("I larte");
 
+        Log("Kliko Vazhdo button");
+        SafeClick(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/div[2]/button[2]"));
+
+
+
         Thread.Sleep(4000);
         Log("Assert Step2 title");
         IWebElement Step2Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/h4")));
