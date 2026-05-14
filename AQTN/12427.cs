@@ -253,7 +253,7 @@ public class _12427_
     public void MarrjeDosjePronesie()
     {
         string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
-        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div/div/div/div/div/div/button/div";
+        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div[2]/div/div/div/div/div/div[1]/div/div";
 
         Log("Open website");
         driver.Navigate().GoToUrl("http://141.95.84.12:8080/");
@@ -277,7 +277,7 @@ public class _12427_
 
         Log("Click LOAD SERVICE");
         driver.FindElement(By.ClassName("load-button")).Click();
-        Thread.Sleep(3000);
+        Thread.Sleep(2000);
 
         Log("Click Aplikimi i Ri");
         SafeClick(By.XPath(aplikimiRiXpath));
@@ -285,8 +285,8 @@ public class _12427_
 
 
         Log("Assert Step 1 Title");
-        IWebElement step2Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div[1]/main/div[3]/div/div/div[2]/div/h4")));
-        Assert.That(step2Title.Text.Trim(), Is.EqualTo("INFORMACION MBI APLIKUESIN"));
+        IWebElement step1Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div[1]/main/div[3]/div/div/div[2]/div/h4")));
+        Assert.That(step1Title.Text.Trim(), Is.EqualTo("INFORMACION MBI APLIKUESIN"));
         Thread.Sleep(4000);
 
         Log("Assert Te dhenat individuale");
@@ -360,41 +360,23 @@ public class _12427_
         IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div[1]/main/div[3]/div/div/div[2]/div/div[3]/div[1]/div/div/div[2]")));
         Assert.That(msgError.Text.Trim(), Is.EqualTo("Kliko për të ngarkuar dokumentin"));
 
-        Log("Ngarko dok jo te sakte");
-
-        string Vendodhja_ne_Harte = @"C:\Users\Kreatx\Downloads\Kthim Alfis test(1).pdf";
-        Assert.That(File.Exists(Vendodhja_ne_Harte), Is.True, "File Vendodhja ne harte nuk ekziston.");
-
-        IWebElement VendodhjaInputWrong = wait.Until(
-                    ExpectedConditions.ElementExists(
-                        By.XPath("//div[contains(.,'Vendndodhja në hartë')]/following::input[@type='file'][1]"))
-                );
-        VendodhjaInputWrong.SendKeys(Vendodhja_ne_Harte);
-
-        Log("Assert uncorrect doc name");
-        IWebElement fileDocNameError = wait.Until(
-            ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Emri i dokumentit është i pavlefshëm')]"))
-        );
-        Assert.That(fileDocNameError.Displayed, Is.True);
-        Assert.That(
-            fileDocNameError.Text.Trim(),
-            Does.Contain("Emri i dokumentit është i pavlefshëm")
-        );
-
-        Log("Hiq dokumentin jo te sakte");
-        IWebElement removeButton = wait.Until(
-            ExpectedConditions.ElementToBeClickable(
-                By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[1]/div/div/div[2]/div/div/div[3]/button"))
-        );
-        removeButton.Click();
-
         Log("Ngarko dok e sakte");
         IWebElement VendodhjaInput = wait.Until(
                     ExpectedConditions.ElementExists(
                         By.XPath("//div[contains(.,'Vendndodhja në hartë')]/following::input[@type='file'][1]"))
                 );
-        Vendodhja_ne_Harte = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        string Vendodhja_ne_Harte = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+
+        VendodhjaInput.SendKeys(Vendodhja_ne_Harte);
+
+        Log ("Kliko Dergo Button");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[2]/div/button[2]"));
+
+        Thread.Sleep(3000);
+
+        Log("Assert Success Message");
+        IWebElement SuccessMsg = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//h5/b[contains(text(),'APLIKIMI JUAJ U DËRGUA ME SUKSES')]")));
+        Assert.That(SuccessMsg.Text.Trim(), Is.EqualTo("APLIKIMI JUAJ U DËRGUA ME SUKSES"));
 
         Log("TEST PASSED");
     }

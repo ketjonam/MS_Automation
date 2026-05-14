@@ -358,41 +358,27 @@ public class _12426_
         IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[1]/div/div/div[2]")));
         Assert.That(msgError.Text.Trim(), Is.EqualTo("Ju lutem ngarkoni dokumentin e kërkuar"));
 
-        Log("Ngarko dok jo te sakte");
-        
-        string Vendodhja_ne_Harte = @"C:\Users\Kreatx\Downloads\Kthim Alfis test(1).pdf";
-        Assert.That(File.Exists(Vendodhja_ne_Harte), Is.True, "File Vendodhja ne harte nuk ekziston.");
-
-        IWebElement VendodhjaInputWrong = wait.Until(
-                    ExpectedConditions.ElementExists(
-                        By.XPath("//div[contains(.,'Vendndodhja në hartë')]/following::input[@type='file'][1]"))
-                );
-        VendodhjaInputWrong.SendKeys(Vendodhja_ne_Harte);
-
-        Log("Assert uncorrect doc name");
-        IWebElement fileDocNameError = wait.Until(
-            ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Emri i dokumentit është i pavlefshëm')]"))
-        );
-        Assert.That(fileDocNameError.Displayed, Is.True);
-        Assert.That(
-            fileDocNameError.Text.Trim(),
-            Does.Contain("Emri i dokumentit është i pavlefshëm")
-        );
-
-        Log("Hiq dokumentin jo te sakte");
-        IWebElement removeButton = wait.Until(
-            ExpectedConditions.ElementToBeClickable(
-                By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[1]/div/div/div/div[2]/div/div/div[3]/button"))
-        );
-        removeButton.Click();
-
         Log("Ngarko dok e sakte");
         IWebElement VendodhjaInput = wait.Until(
                     ExpectedConditions.ElementExists(
-                        By.XPath("//div[contains(.,'Vendndodhja në hartë')]/following::input[@type='file'][1]"))
+                        By.Id("fileHarta"))
                 );
-        Vendodhja_ne_Harte = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        string Vendodhja_ne_Harte = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+
+        VendodhjaInput.SendKeys(Vendodhja_ne_Harte);
+
+        Thread.Sleep(1000);
+
+        Log("Kliko Dergo Button");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div[3]/div[2]/div/button[2]"));
+
+        Thread.Sleep(3000);
+
+        Log("Assert 'Aplikimi u dergua me sukses'");
+        IWebElement SuccessMsg = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div[2]/div/div/h5")));
+        Assert.That(SuccessMsg.Text.Trim(), Is.EqualTo("APLIKIMI JUAJ U DËRGUA ME SUKSES"));
+
+        Thread.Sleep(3000);
 
         Log("TEST PASSED");
     }

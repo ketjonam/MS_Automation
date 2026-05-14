@@ -5,6 +5,7 @@ using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -249,6 +250,229 @@ public class _10092_
         Thread.Sleep(1000);
     }
 
+    /// <summary>
+    /// Ngarkimi përdor &lt;document-upload&gt; me Shadow DOM — butoni dropzone nuk është i dukshëm nga driver i zakonshëm.
+    /// </summary>
+    private IWebElement FindDocumentUploadFileInput()
+    {
+        wait.Until(drv =>
+        {
+            foreach (var host in drv.FindElements(By.TagName("document-upload")))
+            {
+                try
+                {
+                    if (host.GetShadowRoot().FindElements(By.CssSelector("input[type='file']")).Count > 0)
+                        return true;
+                }
+                catch (InvalidOperationException)
+                {
+                    // host pa shadow të hapur
+                }
+                catch (StaleElementReferenceException)
+                {
+                }
+                catch (WebDriverException)
+                {
+                }
+            }
+
+            return drv.FindElements(By.CssSelector("main input[type='file']")).Count > 0;
+        });
+
+        foreach (var host in driver.FindElements(By.TagName("document-upload")))
+        {
+            try
+            {
+                var inputs = host.GetShadowRoot().FindElements(By.CssSelector("input[type='file']"));
+                if (inputs.Count > 0)
+                    return inputs[0];
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (StaleElementReferenceException)
+            {
+            }
+            catch (WebDriverException)
+            {
+            }
+        }
+
+        foreach (var dropzone in driver.FindElements(By.CssSelector("[data-role='dropzone']")))
+        {
+            try
+            {
+                if (!dropzone.Displayed)
+                    continue;
+                return dropzone.FindElement(
+                    By.XPath("./ancestor::*[.//input[@type='file']][1]//input[@type='file']"));
+            }
+            catch (NoSuchElementException)
+            {
+            }
+        }
+
+        return wait.Until(ExpectedConditions.ElementExists(By.CssSelector("main input[type='file']")));
+    }
+
+    private static readonly string UploadResourceNotFoundMessage =
+        "Burimi i kërkuar nuk u gjet";
+
+    /// <summary>
+    /// Teksti i dukshëm i faqes + shadow roots të document-upload (për mesazhe ngarkimi).
+    /// </summary>
+    private string GetPageAndDocumentUploadShadowText()
+    {
+        object? result = ((IJavaScriptExecutor)driver).ExecuteScript(@"
+            const parts = [];
+            if (document.body && document.body.innerText)
+                parts.push(document.body.innerText);
+            document.querySelectorAll('document-upload').forEach(h => {
+                if (h.shadowRoot)
+                    parts.push(h.shadowRoot.textContent || '');
+            });
+            return parts.join('\n');
+        ");
+        return result?.ToString() ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Provo të klikosh rifillimin e ngarkimit brenda shadow DOM (ikonë retry), nëse ekziston.
+    /// </summary>
+    private bool TryClickDocumentUploadRetryInShadow()
+    {
+        object? result = ((IJavaScriptExecutor)driver).ExecuteScript(@"
+            function label(el) {
+                const a = (el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('title') || '');
+                const c = (el.className && el.className.toString) ? el.className.toString() : '';
+                return (a + ' ' + c).toLowerCase();
+            }
+            for (const h of document.querySelectorAll('document-upload')) {
+                const root = h.shadowRoot;
+                if (!root) continue;
+                for (const el of root.querySelectorAll('button, [role=""button""]')) {
+                    const L = label(el);
+                    if (L.includes('retry') || L.includes('refresh') || L.includes('rifresk')
+                        || L.includes('riprov') || L.includes('re-upload') || L.includes('reupload')) {
+                        el.click();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        ");
+        return result is bool b && b;
+    }
+
+    /// <summary>
+    /// Pritet që emri i skedarit të shfaqet dhe që të mos ketë gabimin e burimit (404 në API dokumentesh).
+    /// Emri i skedarit mund të shfaqet edhe kur ngarkimi dështon — prandaj kontrollohet edhe mesazhi i kuq.
+    /// </summary>
+    private void WaitUntilDocumentUploadSucceededInUi(string fileName, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        bool retriedAfterResourceError = false;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            string blob = GetPageAndDocumentUploadShadowText();
+
+            if (blob.Contains(UploadResourceNotFoundMessage, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!retriedAfterResourceError && TryClickDocumentUploadRetryInShadow())
+                {
+                    retriedAfterResourceError = true;
+                    deadline += TimeSpan.FromSeconds(30);
+                    Log(
+                        "U shfaq \"" + UploadResourceNotFoundMessage + "\"; u provua rifillimi nga UI (retry). " +
+                        "Pritje shtesë për përgjigjen e shërbimit të dokumenteve…");
+                    Thread.Sleep(1500);
+                    continue;
+                }
+
+                Assert.Fail(
+                    "Ngarkimi i dokumentit dështoi në UI me mesazhin \"" + UploadResourceNotFoundMessage + "\" " +
+                    (retriedAfterResourceError ? "(edhe pas një retry). " : "") +
+                    "Kjo tregon që API-ja e dokumenteve kthen burim të panjohur (404) ose URL të gabuar — " +
+                    "rregullo konfigurimin e mjedisit / proxy / base URL për shërbimin e dokumenteve; testi nuk mund të vazhdojë pa upload të suksesshëm.");
+            }
+
+            if (blob.Contains(fileName, StringComparison.OrdinalIgnoreCase))
+            {
+                Thread.Sleep(600);
+                blob = GetPageAndDocumentUploadShadowText();
+                if (blob.Contains(UploadResourceNotFoundMessage, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (blob.Contains(fileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    Log("Ngarkimi u verifikua në UI: emri i skedarit pa gabimin e burimit të kërkuar.");
+                    return;
+                }
+            }
+
+            Thread.Sleep(400);
+        }
+
+        Assert.Fail(
+            $"Pas {timeout.TotalSeconds}s nuk u konfirmua ngarkimi i suksesshëm për \"{fileName}\" " +
+            "(emri duhet të jetë i dukshëm dhe pa mesazhin e burimit të panjohur).");
+    }
+
+    private IWebElement FindDerghoButtonInMain()
+    {
+        var candidates = driver.FindElements(
+            By.XPath("//main//button[contains(normalize-space(.), 'Dërgo') or contains(normalize-space(.), 'Dergo')]"));
+        IWebElement? pick = candidates.LastOrDefault(e =>
+        {
+            try
+            {
+                return e.Displayed;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+        });
+        if (pick is null && candidates.Count > 0)
+            pick = candidates[^1];
+        if (pick is null)
+            throw new NoSuchElementException("Nuk u gjet butoni 'Dërgo' brenda main.");
+        return pick;
+    }
+
+    /// <summary>
+    /// Butoni 'Dërgo' shpesh mbetet i mbuluar ose native click nuk e aktivizon; përdor pritje për enabled + klik JS.
+    /// </summary>
+    private void ClickDerghoAfterDocumentationReady()
+    {
+        var sendWait = new WebDriverWait(driver, TimeSpan.FromSeconds(45));
+        sendWait.Until(drv =>
+        {
+            try
+            {
+                var b = FindDerghoButtonInMain();
+                return b.Displayed && b.Enabled;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        });
+
+        IWebElement dergo = FindDerghoButtonInMain();
+        ((IJavaScriptExecutor)driver).ExecuteScript(
+            "arguments[0].scrollIntoView({block:'center', inline:'nearest'});",
+            dergo);
+        Thread.Sleep(400);
+        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", dergo);
+        Log("Klikuar butoni 'Dërgo' (JavaScript click pasi u aktivizua).");
+    }
+
     [Test]
     public void Regjistrim_Ciklomotori()
     {
@@ -318,7 +542,7 @@ public class _10092_
         Assert.That(Atesia.GetAttribute("value").Trim(), Is.EqualTo("Mersin"));
 
         IWebElement Datelindja = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("datelindja")));
-        Assert.That(Datelindja.GetAttribute("value").Trim(), Is.EqualTo("1992-07-30"));  
+        Assert.That(Datelindja.GetAttribute("value").Trim(), Is.EqualTo("1992-07-30"));
 
         IWebElement Vendlindja = wait.Until(ExpectedConditions.ElementIsVisible(By.Name("vendlindja")));
         Assert.That(Vendlindja.GetAttribute("value").Trim(), Is.EqualTo("Kavajë"));
@@ -339,7 +563,7 @@ public class _10092_
         Log("Assert 'Mesazhet e errorit per fushat required'");
         SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
 
-        IWebElement errorMessage= wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[1]/span")));
+        IWebElement errorMessage = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[1]/span")));
         Assert.That(errorMessage.Text.Trim(), Is.EqualTo("Plotësoni fushën për të vazhduar"));
 
         Log("Plotëso fushat e kërkuara dhe vazhdo");
@@ -354,11 +578,37 @@ public class _10092_
         IWebElement Step4Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/h4")));
         Assert.That(Step4Title.Text.Trim(), Is.EqualTo("DOKUMENTACIONI"));
 
+
+
+        Log("Ngarko nje dokument");
+        const string testPdfPath = @"C:\Users\Kreatx\Downloads\TEST.pdf";
+        const string testPdfFileName = "TEST.pdf";
+        Assert.That(
+            File.Exists(testPdfPath),
+            Is.True,
+            $"Skedari PDF i dokumentit nuk ekziston: {testPdfPath}");
+
+        foreach (var host in driver.FindElements(By.TagName("document-upload")))
+        {
+            try
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript(
+                    "arguments[0].scrollIntoView({block:'center', inline:'nearest'});",
+                    host);
+            }
+            catch (StaleElementReferenceException)
+            {
+            }
+        }
+
+        Thread.Sleep(400);
+        FindDocumentUploadFileInput().SendKeys(testPdfPath);
+        Log("Duke pritur që ngarkimi të përfundojë në UI (pa gabimin e burimit të kërkuar)…");
+        WaitUntilDocumentUploadSucceededInUi(testPdfFileName, TimeSpan.FromSeconds(45));
+
         Log("Kliko CHECKBOX");
 
         IWebElement checkbox = wait.Until(ExpectedConditions.ElementExists(By.Id("consentCheckbox")));
-
-       
         ((IJavaScriptExecutor)driver).ExecuteScript(
             "arguments[0].scrollIntoView({block:'center'});",
             checkbox
@@ -366,8 +616,57 @@ public class _10092_
 
         Thread.Sleep(800);
 
-        
+
         ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", checkbox);
+
+        Thread.Sleep(1000);
+
+        Log("Kliko Dergo Button");
+        ClickDerghoAfterDocumentationReady();
+
+        const string alertExpectedTitle = "Kujdes";
+        const string alertExpectedDescription =
+            "Ekzistojne aplikime te pa perfunduara per kete mjet.";
+
+        IWebElement? alertModal = null;
+        try
+        {
+            alertModal = new WebDriverWait(driver, TimeSpan.FromSeconds(12)).Until(
+                ExpectedConditions.ElementIsVisible(By.CssSelector(".alert-modal-container")));
+        }
+        catch (WebDriverTimeoutException)
+        {
+        }
+
+        if (alertModal is not null && alertModal.Displayed)
+        {
+            Log("Aplikimi u dërgua: sistemi u përgjigj dhe u shfaq modal paralajmërimi i pritur.");
+            IWebElement modalTitle = alertModal.FindElement(By.CssSelector("h2.alert-modal-title"));
+            IWebElement modalDesc = alertModal.FindElement(By.CssSelector(".alert-modal-description"));
+            Assert.That(modalTitle.Text.Trim(), Is.EqualTo(alertExpectedTitle));
+            Assert.That(modalDesc.Text.Trim(), Is.EqualTo(alertExpectedDescription));
+
+            IWebElement mbyllBtn = alertModal.FindElement(
+                By.CssSelector("button.alert-modal-button--primary"));
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "arguments[0].scrollIntoView({block:'center'});",
+                mbyllBtn);
+            Thread.Sleep(300);
+            try
+            {
+                mbyllBtn.Click();
+            }
+            catch (ElementClickInterceptedException)
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", mbyllBtn);
+            }
+        }
+        else
+        {
+            Assert.Fail(
+                "Pas 'Dërgo' nuk u shfaq modal paralajmërimi (.alert-modal-container). " +
+                "Kontrollo nëse dokumenti u ngarkua plotësisht dhe nëse butoni 'Dërgo' ekzekutoi dërgimin.");
+        }
 
         Log("TEST PASSED");
     }
