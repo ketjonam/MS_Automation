@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Edge;
@@ -159,7 +159,7 @@ public class IndividWeb365
         Log("Fill form");
         driver.FindElement(By.Id("Nid")).SendKeys("J55728107R");
         driver.FindElement(By.Id("ServiceCode")).SendKeys("365");
-        driver.FindElement(By.Id("MicroserviceName")).SendKeys("mieinstitution-mie-institution-1");
+        driver.FindElement(By.Id("MicroserviceName")).SendKeys("mie_merge");
         driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
         driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
         driver.FindElement(By.Id("PhoneNumber")).SendKeys("0676041404");
@@ -175,7 +175,7 @@ public class IndividWeb365
         Thread.Sleep(3000);
 
         Log("Click Aplikimi i Ri");
-        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div/div/div/div/button/div"));
+        SafeClick(By.XPath("//button[@aria-label='Aplikim i ri']"));
 
         Log("Click Afisho pa kontrate");
         SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/form/div/div[2]/div[2]/div[2]/div/button"));

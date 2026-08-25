@@ -36,4 +36,13 @@
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
+  <!-- The "MS Automation refactor" project lives in a subfolder and has its own .csproj.
+       Exclude it here so this project does not also compile those duplicated files. -->
+  <ItemGroup>
+    <Compile Remove="MS Automation refactor\**\*.cs" />
+    <Content Remove="MS Automation refactor\**\*" />
+    <None Remove="MS Automation refactor\**\*" />
+    <EmbeddedResource Remove="MS Automation refactor\**\*" />
+  </ItemGroup>
+
 </Project>

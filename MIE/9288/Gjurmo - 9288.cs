@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Support.UI;
@@ -78,7 +78,7 @@ public class Gjurmimi_9288
                 Log("Fill in the form fields");
                 driver.FindElement(By.Id("Nid")).SendKeys("L12121023B");
                 driver.FindElement(By.Id("ServiceCode")).SendKeys("9288");
-                driver.FindElement(By.Id("MicroserviceName")).SendKeys("mieinstitution-mie-institution-1");
+                driver.FindElement(By.Id("MicroserviceName")).SendKeys("mie_merge");
                 driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
                 driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
                 driver.FindElement(By.Id("PhoneNumber")).SendKeys("0676041404");

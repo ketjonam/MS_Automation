@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Support.UI;
@@ -97,7 +97,7 @@ public class _14764_NID
                 Log("Fill in the form fields");
                 driver.FindElement(By.Id("Nid")).SendKeys("J55728107R");
                 driver.FindElement(By.Id("ServiceCode")).SendKeys("14764");
-                driver.FindElement(By.Id("MicroserviceName")).SendKeys("mie-institution");
+                driver.FindElement(By.Id("MicroserviceName")).SendKeys("mie_merge");
                 driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
                 driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
                 driver.FindElement(By.Id("PhoneNumber")).SendKeys("0676041404");
@@ -113,7 +113,7 @@ public class _14764_NID
 
                 Log("Click 'Aplikim i Ri' button");
                 wait.Until(ExpectedConditions.ElementToBeClickable(
-                    By.XPath("/html/body/div/main/div[3]/div/div/div/div/div/div/div[1]/div/button"))).Click();
+                    By.XPath("//button[@aria-label='Aplikim i ri']"))).Click();
 
                 Thread.Sleep(1000);
                 Log("Të dhënat e preventivit");
