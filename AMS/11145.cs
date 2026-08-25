@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Edge;
@@ -322,11 +322,62 @@ public class _11145_
         Log("Te gjitha dok jo te sakta u hoqen");
     }
 
+    private IWebElement FindDerghoButtonInMain()
+    {
+        var candidates = driver.FindElements(
+            By.XPath("//main//button[contains(normalize-space(.), 'Dërgo') or contains(normalize-space(.), 'Dergo')]"));
+        IWebElement? pick = candidates.LastOrDefault(e =>
+        {
+            try
+            {
+                return e.Displayed;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+        });
+        if (pick is null && candidates.Count > 0)
+            pick = candidates[^1];
+        if (pick is null)
+            throw new NoSuchElementException("Nuk u gjet butoni 'Dërgo' brenda main.");
+        return pick;
+    }
+
+    private void ClickDerghoAfterDocumentationReady()
+    {
+        var sendWait = new WebDriverWait(driver, TimeSpan.FromSeconds(45));
+        sendWait.Until(drv =>
+        {
+            try
+            {
+                var b = FindDerghoButtonInMain();
+                return b.Displayed && b.Enabled;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        });
+
+        IWebElement dergo = FindDerghoButtonInMain();
+        ((IJavaScriptExecutor)driver).ExecuteScript(
+            "arguments[0].scrollIntoView({block:'center', inline:'nearest'});",
+            dergo);
+        Thread.Sleep(400);
+        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", dergo);
+        Log("Klikuar butoni 'Dërgo' (JavaScript click pasi u aktivizua).");
+    }
+
     [Test]
     public void VertetimPerGradatShkencore()
     {
         string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
-        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div/div/div/div/div/div/button/div";
+        string aplikimiRiXpath = "//button[@aria-label='Aplikim i ri']";
 
         Log("Open website");
         driver.Navigate().GoToUrl("http://141.95.84.12:8080/");
@@ -337,7 +388,7 @@ public class _11145_
         Log("Fill form");
         driver.FindElement(By.Id("Nid")).SendKeys("J55728107R");
         driver.FindElement(By.Id("ServiceCode")).SendKeys("11145");
-        driver.FindElement(By.Id("MicroserviceName")).SendKeys("ams-other");
+        driver.FindElement(By.Id("MicroserviceName")).SendKeys("ams_merge");
         driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
         driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
         driver.FindElement(By.Id("PhoneNumber")).SendKeys("0676041404");
