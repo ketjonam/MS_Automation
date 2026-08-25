@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Edge;
@@ -325,7 +325,7 @@ public class _15366_
     public void LejeImportiPajisjesh()
     {
         string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
-        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div/div/div/div/div[1]/div/button/div/div[2]";
+        string aplikimiRiXpath = "//button[@aria-label='Aplikim i ri']";
 
         Log("Open website");
         driver.Navigate().GoToUrl("http://141.95.84.12:8080/");
@@ -336,7 +336,7 @@ public class _15366_
         Log("Fill form");
         driver.FindElement(By.Id("Nid")).SendKeys("L12121023B");
         driver.FindElement(By.Id("ServiceCode")).SendKeys("15366");
-        driver.FindElement(By.Id("MicroserviceName")).SendKeys("msh-merge-v2");
+        driver.FindElement(By.Id("MicroserviceName")).SendKeys("mshms_merge");
         driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
         driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
         driver.FindElement(By.Id("PhoneNumber")).SendKeys("0676041404");

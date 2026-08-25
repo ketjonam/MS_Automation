@@ -10,8 +10,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
+
 [TestFixture]
-public class _15128_
+public class _15128_FailCase_
 {
     private IWebDriver driver;
     private WebDriverWait wait;
@@ -37,7 +38,7 @@ public class _15128_
 
         Directory.CreateDirectory(artifactsFolder);
 
-        Log("===== TEST START =====");
+        Log("===== TEST START (FAIL CASE) =====");
         Log($"Test: {testName}");
         Log($"Artifacts folder: {artifactsFolder}");
     }
@@ -373,8 +374,75 @@ public class _15128_
         Log("Klikuar butoni 'Dërgo' (JavaScript click pasi u aktivizua).");
     }
 
+    private string CaptureVisibleUiMessageAfterDergo()
+    {
+        Thread.Sleep(1500);
+
+        string[] preferredSelectors =
+        {
+            ".alert-modal-container",
+            ".alert-modal-title",
+            ".alert-modal-description",
+            ".swal2-title",
+            ".swal2-html-container",
+            "[role='alert']",
+            ".text-danger",
+            ".invalid-feedback",
+            ".toast-body",
+            ".Toastify__toast-body"
+        };
+
+        foreach (string css in preferredSelectors)
+        {
+            try
+            {
+                foreach (var el in driver.FindElements(By.CssSelector(css)))
+                {
+                    try
+                    {
+                        if (!el.Displayed)
+                            continue;
+                        string t = (el.Text ?? string.Empty).Trim();
+                        if (!string.IsNullOrWhiteSpace(t))
+                            return t;
+                    }
+                    catch (StaleElementReferenceException)
+                    {
+                    }
+                }
+            }
+            catch (WebDriverException)
+            {
+            }
+        }
+
+        object? jsResult = ((IJavaScriptExecutor)driver).ExecuteScript(@"
+            const parts = [];
+            const root = document.querySelector('#root') || document.querySelector('main') || document.body;
+            if (!root) return '';
+
+            const danger = Array.from(root.querySelectorAll('.text-danger, .invalid-feedback, [role=""alert""], .alert'))
+                .map(e => (e.innerText || '').trim())
+                .filter(Boolean);
+            if (danger.length) return danger.join(' | ');
+
+            const headings = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6,p,span'))
+                .map(e => (e.innerText || '').trim())
+                .filter(t => t.length > 5 && t.length < 300);
+            if (headings.length) return headings.slice(0, 8).join(' | ');
+
+            return (root.innerText || '').trim().substring(0, 500);
+        ");
+
+        string fromJs = (jsResult?.ToString() ?? string.Empty).Trim();
+        if (!string.IsNullOrWhiteSpace(fromJs))
+            return fromJs;
+
+        return "(Nuk u gjet asnjë mesazh i dukshëm në UI pas Dërgo.)";
+    }
+
     [Test]
-    public void RegjistrimPajisjeMjekesore()
+    public void RegjistrimPajisjeMjekesore_FailCase_ReturnsUiMessage()
     {
         string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
         string aplikimiRiXpath = "//button[@aria-label='Aplikim i ri']";
@@ -385,7 +453,7 @@ public class _15128_
         Log("Click service button");
         wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath(serviceButtonXpath))).Click();
 
-        Log("Fill form");
+        Log("Fill form (të njëjtat të dhëna si 15128)");
         driver.FindElement(By.Id("Nid")).SendKeys("L12121023B");
         driver.FindElement(By.Id("ServiceCode")).SendKeys("15128");
         driver.FindElement(By.Id("MicroserviceName")).SendKeys("mshms_merge");
@@ -522,241 +590,75 @@ public class _15128_
 
         Thread.Sleep(3000);
 
-        Log("Kliko Dergo buton pa ngarkuar dokumentin");
-        SafeClick(By.XPath("/html/body/div[1]/main/div[3]/div/div/div/div/div[3]/div[3]/div/button[2]"));
+        Log("STIMULIM FAIL: nuk ngarkohen dokumente (qëllimisht).");
+        Thread.Sleep(1000);
 
-        IWebElement msgError = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[3]/div[1]/div[2]/div[2]")));
-        Assert.That(msgError.Text.Trim(), Is.EqualTo("Plotësoni fushën për të vazhduar"));
-
-        Log("Ngarko dok jo te sakte");
-
-        string ManualPerdorimi = @"C:\Users\Kreatx\Downloads\Kthim Alfis test(1).pdf";
-        string DeklarateKonformiteti = @"C:\Users\Kreatx\Downloads\E88.30_CheckPointVPN.msi";
-        string SpecifikimetTeknike = @"C:\Users\Kreatx\Downloads\TC_TestAutomation_Mobiread.docx";
-
-        Assert.That(File.Exists(ManualPerdorimi), Is.True, "File ManualPerdorimi nuk ekziston.");
-        Assert.That(File.Exists(DeklarateKonformiteti), Is.True, "File DeklarateKonformiteti nuk ekziston.");
-        Assert.That(File.Exists(SpecifikimetTeknike), Is.True, "File SpecifikimetTeknike nuk ekziston.");
-
-        IWebElement ManualPerdorimiInputWrong = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Manual përdorimi')]/following::input[@type='file'][1]"))
-        );
-        ManualPerdorimiInputWrong.SendKeys(ManualPerdorimi);
-
-        IWebElement DeklarateKonformitetiInputWrong = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Deklaratë konformiteti')]/following::input[@type='file'][1]"))
-        );
-        DeklarateKonformitetiInputWrong.SendKeys(DeklarateKonformiteti);
-
-        IWebElement SpecifikimetTeknikeInputWrong = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Specifikimet teknike')]/following::input[@type='file'][1]"))
-        );
-        SpecifikimetTeknikeInputWrong.SendKeys(SpecifikimetTeknike);
-
-        Log("Assert uncorrect doc name");
-        IWebElement fileDocNameError = wait.Until(
-            ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Emri i dokumentit është i pavlefshëm')]"))
-        );
-        Assert.That(fileDocNameError.Displayed, Is.True);
-        Assert.That(
-            fileDocNameError.Text.Trim(),
-            Does.Contain("Emri i dokumentit është i pavlefshëm")
-        );
-
-        Log("Assert uncorrect doc size");
-        IWebElement fileDocSizeError = wait.Until(
-            ExpectedConditions.ElementIsVisible(
-                By.XPath("//div[contains(@class,'text-danger') and contains(text(),'Madhësia e dokumentit nuk duhet të jetë më shumë se  5MB')]"))
-        );
-        Assert.That(fileDocSizeError.Displayed, Is.True);
-        Assert.That(
-            fileDocSizeError.Text.Trim(),
-            Does.Contain("Madhësia e dokumentit nuk duhet të jetë më shumë se 5MB")
-        );
-
-        Log("Remove uncorrect docs");
-        RemoveAllUploadedDocs();
-        Thread.Sleep(1500);
-
-        Log("Prit 1 minutë para ngarkimit të dokumentit të saktë…");
-        Thread.Sleep(TimeSpan.FromMinutes(1));
-
-        Log("Ngarko dok e sakte");
-        ManualPerdorimi = @"C:\Users\Kreatx\Downloads\Signed_TEST_signed.pdf";
-        DeklarateKonformiteti = @"C:\Users\Kreatx\Downloads\Signed_TEST_signed.pdf";
-        SpecifikimetTeknike = @"C:\Users\Kreatx\Downloads\Signed_TEST_signed.pdf";
-        string ListaMaterialeve = @"C:\Users\Kreatx\Downloads\Signed_TEST_signed.pdf";
-
-        Assert.That(File.Exists(ManualPerdorimi), Is.True, "File Manuali i përdorimit nuk ekziston.");
-        Assert.That(File.Exists(DeklarateKonformiteti), Is.True, "File Deklaratë konformiteti nuk ekziston.");
-        Assert.That(File.Exists(SpecifikimetTeknike), Is.True, "File Specifikimet teknike nuk ekziston.");
-        Assert.That(File.Exists(ListaMaterialeve), Is.True, "File Lista e materialeve nuk ekziston.");
-
-        IWebElement ManualPerdorimiInput = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Manual përdorimi')]/following::input[@type='file'][1]"))
-        );
-        ManualPerdorimiInput.SendKeys(ManualPerdorimi);
-
-        IWebElement DeklarateKonformitetiInput = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Deklaratë konformiteti')]/following::input[@type='file'][1]"))
-        );
-        DeklarateKonformitetiInput.SendKeys(DeklarateKonformiteti);
-
-        IWebElement SpecifikimetTeknikeInput = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Specifikimet teknike')]/following::input[@type='file'][1]"))
-        );
-        SpecifikimetTeknikeInput.SendKeys(SpecifikimetTeknike);
-
-        IWebElement ListaMaterialeveInput = wait.Until(
-            ExpectedConditions.ElementExists(
-                By.XPath("//div[contains(.,'Lista e materialeve')]/following::input[@type='file'][1]"))
-        );
-        ListaMaterialeveInput.SendKeys(ListaMaterialeve);
-
-      Thread.Sleep(2000);
-
-        Log("Kliko Dergo Button");
+        Log("Kliko butonin dergo pa ngarkuar dokumentat e detyrueshme");
         ClickDerghoAfterDocumentationReady();
 
-        const string successHeadline = "APLIKIMI JUAJ U DËRGUA ME SUKSES";
-        const string alertExpectedTitle = "Kujdes";
-        const string alertExpectedDescription =
-            "Ekzistojne aplikime te pa perfunduara per kete mjet.";
-
         By successHeadlineBy = By.XPath(
-            "//h5[contains(normalize-space(.),'APLIKIMI JUAJ U DËRGUA ME SUKSES')] | //h5/b[contains(normalize-space(.),'APLIKIMI JUAJ U DËRGUA ME SUKSES')]");
+            "//h5[contains(normalize-space(.),'APLIKIMI JUAJ U DËRGUA ME SUKSES')]");
         By alertModalBy = By.CssSelector(".alert-modal-container");
 
-        string? outcome = null;
+        Thread.Sleep(2500);
+
+        bool sawSuccess = false;
         try
         {
-            outcome = new WebDriverWait(driver, TimeSpan.FromSeconds(20)).Until(drv =>
-            {
-                try
-                {
-                    var successEls = drv.FindElements(successHeadlineBy);
-                    if (successEls.Any(e =>
-                    {
-                        try { return e.Displayed; }
-                        catch (StaleElementReferenceException) { return false; }
-                    }))
-                        return "success";
-                }
-                catch (StaleElementReferenceException)
-                {
-                }
-
-                try
-                {
-                    var alertEls = drv.FindElements(alertModalBy);
-                    if (alertEls.Any(e =>
-                    {
-                        try { return e.Displayed; }
-                        catch (StaleElementReferenceException) { return false; }
-                    }))
-                        return "alert";
-                }
-                catch (StaleElementReferenceException)
-                {
-                }
-
-                return null;
-            });
-        }
-        catch (WebDriverTimeoutException)
-        {
-        }
-
-        if (outcome == "success")
-        {
-            Log("Pas 'Dërgo' u shfaq ekrani i suksesit.");
-            IWebElement headline = wait.Until(ExpectedConditions.ElementIsVisible(successHeadlineBy));
-            Assert.That(headline.Text.Trim(), Does.Contain(successHeadline).IgnoreCase);
-
-            var refEls = driver.FindElements(
-                By.XPath("//h6[contains(normalize-space(.),'Numri referencë i aplikimit')]"));
-            var trackEls = driver.FindElements(
-                By.XPath("//button[contains(normalize-space(.),'GJURMO APLIKIMIN')]"));
-            bool hasRef = refEls.Any(e =>
+            sawSuccess = driver.FindElements(successHeadlineBy).Any(e =>
             {
                 try { return e.Displayed; }
                 catch (StaleElementReferenceException) { return false; }
             });
-            bool hasTrack = trackEls.Any(e =>
-            {
-                try { return e.Displayed; }
-                catch (StaleElementReferenceException) { return false; }
-            });
-
-            if (hasRef && hasTrack)
-            {
-                IWebElement referenceLine = refEls.First(e =>
-                {
-                    try { return e.Displayed; }
-                    catch (StaleElementReferenceException) { return false; }
-                });
-                Assert.That(
-                    referenceLine.Text.Trim(),
-                    Does.Contain("Numri referencë i aplikimit është:").IgnoreCase);
-                Assert.That(
-                    referenceLine.Text.Trim(),
-                    Does.Match("(?i)eALB-\\d+"));
-
-                IWebElement trackBtn = trackEls.First(e =>
-                {
-                    try { return e.Displayed; }
-                    catch (StaleElementReferenceException) { return false; }
-                });
-                Assert.That(trackBtn.Displayed, Is.True);
-                Log("Sukses i verifikuar: headline, referenca eALB dhe butoni GJURMO APLIKIMIN.");
-            }
-            else
-            {
-                Log("Sukses i verifikuar: headline (eALB/GJURMO nuk u gjetën — mjafton për AQTN).");
-            }
         }
-        else if (outcome == "alert")
+        catch (WebDriverException)
         {
-            Log("Aplikimi u dërgua: sistemi u përgjigj dhe u shfaq modal paralajmërimi 'Kujdes'.");
-            IWebElement alertModal = driver.FindElement(alertModalBy);
-            IWebElement modalTitle = alertModal.FindElement(By.CssSelector("h2.alert-modal-title"));
-            Assert.That(modalTitle.Text.Trim(), Is.EqualTo(alertExpectedTitle));
-
-            var descEls = alertModal.FindElements(By.CssSelector(".alert-modal-description"));
-            if (descEls.Count > 0)
-            {
-                Assert.That(descEls[0].Text.Trim(), Is.EqualTo(alertExpectedDescription));
-            }
-
-            IWebElement mbyllBtn = alertModal.FindElement(
-                By.CssSelector("button.alert-modal-button--primary"));
-            ((IJavaScriptExecutor)driver).ExecuteScript(
-                "arguments[0].scrollIntoView({block:'center'});",
-                mbyllBtn);
-            Thread.Sleep(300);
-            try
-            {
-                mbyllBtn.Click();
-            }
-            catch (ElementClickInterceptedException)
-            {
-                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", mbyllBtn);
-            }
         }
-        else
+
+        if (sawSuccess)
         {
             Assert.Fail(
-                "Pas 'Dërgo' nuk u shfaq as ekrani i suksesit ('APLIKIMI JUAJ U DËRGUA ME SUKSES') " +
-                "as modal paralajmërimi 'Kujdes' (.alert-modal-container).");
+                "Stimulimi i FAIL dështoi: u shfaq ekrani i suksesit (APLIKIMI JUAJ U DËRGUA ME SUKSES.) " +
+                "ndërsa ky test pret që të mos shfaqet as sukses as Kujdes.");
         }
 
-        Log("TEST PASSED");
+        try
+        {
+            var visibleAlert = driver.FindElements(alertModalBy).FirstOrDefault(e =>
+            {
+                try { return e.Displayed; }
+                catch (StaleElementReferenceException) { return false; }
+            });
+
+            if (visibleAlert is not null)
+            {
+                string title = visibleAlert.FindElement(By.CssSelector("h2.alert-modal-title")).Text.Trim();
+                string desc = visibleAlert.FindElement(By.CssSelector(".alert-modal-description")).Text.Trim();
+                string modalMessage = $"[{title}] {desc}";
+
+                if (string.Equals(title, "Kujdes", StringComparison.OrdinalIgnoreCase))
+                {
+                    Assert.Fail(
+                        "Stimulimi i FAIL dështoi: u shfaq modal 'Kujdes' (aplikime ekzistuese). " +
+                        $"Mesazhi: {modalMessage}");
+                }
+
+                Log("Rasti FAIL — u shfaq modal (jo Kujdes): " + modalMessage);
+                Assert.Fail(
+                    "Rasti FAIL (as sukses, as Kujdes). Mesazhi që u shfaq në UI: " + modalMessage);
+            }
+        }
+        catch (NoSuchElementException)
+        {
+        }
+        catch (WebDriverException)
+        {
+        }
+
+        string uiMessage = CaptureVisibleUiMessageAfterDergo();
+        Log("Mesazhi i kapur nga UI (rasti FAIL): " + uiMessage);
+
+        Assert.Fail(
+            "Rasti FAIL (as sukses, as Kujdes). Mesazhi që u shfaq në UI: " + uiMessage);
     }
 }
