@@ -1,0 +1,599 @@
+using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Edge;
+using OpenQA.Selenium.Support.UI;
+using SeleniumExtras.WaitHelpers;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading;
+
+
+[TestFixture]
+public class _10109_FailCase_
+{
+    private IWebDriver driver;
+    private WebDriverWait wait;
+    private string artifactsFolder;
+
+    [SetUp]
+    public void Setup()
+    {
+        var options = new EdgeOptions();
+        options.AddArgument("start-maximized");
+
+        driver = new EdgeDriver(options);
+        wait = new WebDriverWait(driver, TimeSpan.FromSeconds(15));
+
+        string runTime = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string testName = TestContext.CurrentContext.Test.Name;
+
+        artifactsFolder = Path.Combine(
+            TestContext.CurrentContext.WorkDirectory,
+            "TestArtifacts",
+            $"{testName}_{runTime}"
+        );
+
+        Directory.CreateDirectory(artifactsFolder);
+
+        Log("===== TEST START (FAIL CASE) =====");
+        Log($"Test: {testName}");
+        Log($"Artifacts folder: {artifactsFolder}");
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        try
+        {
+            var status = TestContext.CurrentContext.Result.Outcome.Status;
+            Log($"Test status: {status}");
+
+            if (status == TestStatus.Failed)
+            {
+                SaveScreenshot("FAILED");
+                SavePageSource("FAILED");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log("TearDown error: " + ex.Message);
+        }
+        finally
+        {
+            try
+            {
+                driver?.Quit();
+                driver?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Log("Driver dispose error: " + ex.Message);
+            }
+
+            Log("===== TEST END =====");
+        }
+    }
+
+    private void Log(string message)
+    {
+        string logLine = $"{DateTime.Now:HH:mm:ss} | {message}";
+        TestContext.Progress.WriteLine(logLine);
+        TestContext.Out.WriteLine(logLine);
+        Console.WriteLine(logLine);
+    }
+
+    private void SaveScreenshot(string name)
+    {
+        try
+        {
+            if (driver is ITakesScreenshot screenshotDriver)
+            {
+                string file = Path.Combine(
+                    artifactsFolder,
+                    $"{name}_Screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png"
+                );
+
+                screenshotDriver.GetScreenshot().SaveAsFile(file);
+                TestContext.AddTestAttachment(file, "Failure Screenshot");
+                Log("Screenshot saved: " + file);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log("Screenshot error: " + ex.Message);
+        }
+    }
+
+    private void SavePageSource(string name)
+    {
+        try
+        {
+            string file = Path.Combine(
+                artifactsFolder,
+                $"{name}_PageSource_{DateTime.Now:yyyyMMdd_HHmmss}.html"
+            );
+
+            File.WriteAllText(file, driver.PageSource);
+            TestContext.AddTestAttachment(file, "Failure Page Source");
+            Log("PageSource saved: " + file);
+        }
+        catch (Exception ex)
+        {
+            Log("PageSource error: " + ex.Message);
+        }
+    }
+
+    private void SafeClick(By locator)
+    {
+        IWebElement element = wait.Until(ExpectedConditions.ElementExists(locator));
+
+        ((IJavaScriptExecutor)driver).ExecuteScript(
+            "arguments[0].scrollIntoView({block:'center'});",
+            element
+        );
+
+        Thread.Sleep(500);
+
+        try
+        {
+            element = wait.Until(ExpectedConditions.ElementToBeClickable(locator));
+            element.Click();
+        }
+        catch (ElementClickInterceptedException)
+        {
+            element = driver.FindElement(locator);
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", element);
+        }
+    }
+
+    private void WaitUntilOptionExists(By selectLocator, string optionValue)
+    {
+        wait.Until(drv =>
+        {
+            try
+            {
+                var selectElement = new SelectElement(drv.FindElement(selectLocator));
+                return selectElement.Options.Any(o =>
+                    string.Equals(
+                        (o.GetAttribute("value") ?? string.Empty).Trim(),
+                        optionValue,
+                        StringComparison.OrdinalIgnoreCase
+                    ));
+            }
+            catch
+            {
+                return false;
+            }
+        });
+    }
+
+    private void SelectByValueSafe(By selectLocator, string optionValue)
+    {
+        WaitUntilOptionExists(selectLocator, optionValue);
+
+        IWebElement dropdown = wait.Until(ExpectedConditions.ElementIsVisible(selectLocator));
+
+        ((IJavaScriptExecutor)driver).ExecuteScript(
+            "arguments[0].scrollIntoView({block:'center'});",
+            dropdown
+        );
+
+        Thread.Sleep(500);
+
+        var select = new SelectElement(dropdown);
+        Log($"Po zgjedh value '{optionValue}' tek {selectLocator}");
+        select.SelectByValue(optionValue);
+        Thread.Sleep(1000);
+    }
+
+    private IWebElement FindDerghoButtonInMain()
+    {
+        var candidates = driver.FindElements(
+            By.XPath("//main//button[contains(normalize-space(.), 'Dërgo') or contains(normalize-space(.), 'Dergo')]"));
+        IWebElement? pick = candidates.LastOrDefault(e =>
+        {
+            try
+            {
+                return e.Displayed;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+        });
+        if (pick is null && candidates.Count > 0)
+            pick = candidates[^1];
+        if (pick is null)
+            throw new NoSuchElementException("Nuk u gjet butoni 'Dërgo' brenda main.");
+        return pick;
+    }
+
+    private void ClickDerghoAfterDocumentationReady()
+    {
+        var sendWait = new WebDriverWait(driver, TimeSpan.FromSeconds(45));
+        sendWait.Until(drv =>
+        {
+            try
+            {
+                var b = FindDerghoButtonInMain();
+                return b.Displayed && b.Enabled;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        });
+
+        IWebElement dergo = FindDerghoButtonInMain();
+        ((IJavaScriptExecutor)driver).ExecuteScript(
+            "arguments[0].scrollIntoView({block:'center', inline:'nearest'});",
+            dergo);
+        Thread.Sleep(400);
+        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", dergo);
+        Log("Klikuar butoni 'Dërgo' (JavaScript click pasi u aktivizua).");
+    }
+
+    private string CaptureVisibleUiMessageAfterDergo()
+    {
+        Thread.Sleep(1500);
+
+        string[] preferredSelectors =
+        {
+            ".alert-modal-container",
+            ".alert-modal-title",
+            ".alert-modal-description",
+            ".swal2-title",
+            ".swal2-html-container",
+            "[role='alert']",
+            ".text-danger",
+            ".invalid-feedback",
+            ".toast-body",
+            ".Toastify__toast-body"
+        };
+
+        foreach (string css in preferredSelectors)
+        {
+            try
+            {
+                foreach (var el in driver.FindElements(By.CssSelector(css)))
+                {
+                    try
+                    {
+                        if (!el.Displayed)
+                            continue;
+                        string t = (el.Text ?? string.Empty).Trim();
+                        if (!string.IsNullOrWhiteSpace(t))
+                            return t;
+                    }
+                    catch (StaleElementReferenceException)
+                    {
+                    }
+                }
+            }
+            catch (WebDriverException)
+            {
+            }
+        }
+
+        object? jsResult = ((IJavaScriptExecutor)driver).ExecuteScript(@"
+            const parts = [];
+            const root = document.querySelector('#root') || document.querySelector('main') || document.body;
+            if (!root) return '';
+
+            const danger = Array.from(root.querySelectorAll('.text-danger, .invalid-feedback, [role=""alert""], .alert'))
+                .map(e => (e.innerText || '').trim())
+                .filter(Boolean);
+            if (danger.length) return danger.join(' | ');
+
+            const headings = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6,p,span'))
+                .map(e => (e.innerText || '').trim())
+                .filter(t => t.length > 5 && t.length < 300);
+            if (headings.length) return headings.slice(0, 8).join(' | ');
+
+            return (root.innerText || '').trim().substring(0, 500);
+        ");
+
+        string fromJs = (jsResult?.ToString() ?? string.Empty).Trim();
+        if (!string.IsNullOrWhiteSpace(fromJs))
+            return fromJs;
+
+        return "(Nuk u gjet asnjë mesazh i dukshëm në UI pas Dërgo.)";
+    }
+
+    [Test]
+    public void Ndryshim_Gjeneralitetesh_FailCase_ReturnsUiMessage()
+    {
+        string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
+        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div/div/div/div/div/div/button/div";
+        string titleXpath = "/html/body/div/main/div[3]/div/div/div/div/h4";
+
+        Log("Open website");
+        driver.Navigate().GoToUrl("http://141.95.84.12:8080/");
+
+        Log("Click service button");
+        wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath(serviceButtonXpath))).Click();
+
+        Log("Fill form (të njëjtat të dhëna si 10109)");
+        driver.FindElement(By.Id("Nid")).SendKeys("J25730113W");
+        driver.FindElement(By.Id("ServiceCode")).SendKeys("10109");
+        driver.FindElement(By.Id("MicroserviceName")).SendKeys("dpshtrr-merge-not-ams_refactor");
+        driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
+        driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
+        driver.FindElement(By.Id("PhoneNumber")).SendKeys("0676041404");
+
+        new SelectElement(driver.FindElement(By.Id("ProfileType")))
+            .SelectByValue("Individual");
+
+        new SelectElement(driver.FindElement(By.Id("Platform")))
+            .SelectByValue("WEB");
+
+        Log("Click LOAD SERVICE");
+        driver.FindElement(By.ClassName("load-button")).Click();
+        Thread.Sleep(3000);
+
+        Log("Click Aplikimi i Ri");
+        SafeClick(By.XPath(aplikimiRiXpath));
+        Thread.Sleep(3000);
+
+        Log("Assert Title");
+        IWebElement titleElement = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(titleXpath)));
+        Assert.That(titleElement.Displayed, Is.True, "Titulli nuk eshte visible");
+
+        Log("Zgjidh te dhenat mbi Drejtorine Rajonale");
+        SelectByValueSafe(By.Name("rajoni"), "346f9d39-16dd-4000-a53d-b8b49a30d210");
+        SelectByValueSafe(By.Name("bashkia"), "56");
+        SelectByValueSafe(By.Name("njesiaAdm"), "375");
+        SelectByValueSafe(By.Name("nenNjesia"), "3323");
+
+        Log("Kliko Vazhdo");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
+        Thread.Sleep(4000);
+
+        Log("Assert Step 2 Title");
+        IWebElement step2Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/h4")));
+        Assert.That(step2Title.Text.Trim(), Is.EqualTo("TË DHËNAT E APLIKANTIT"));
+        Thread.Sleep(4000);
+
+        Log("Assert Te dhenat individuale");
+        Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("nid"))).GetAttribute("value").Trim(), Is.EqualTo("J25730113W"));
+        Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("emri"))).GetAttribute("value").Trim(), Is.EqualTo("Daniela"));
+        Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("mbiemri"))).GetAttribute("value").Trim(), Is.EqualTo("Mema"));
+        Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("atesia"))).GetAttribute("value").Trim(), Is.EqualTo("Mersin"));
+        Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("datelindja"))).GetAttribute("value").Trim(), Is.EqualTo("1992-07-30"));
+        Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("birthPlace"))).GetAttribute("value").Trim(), Is.EqualTo("Kavajë"));
+        Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("email"))).GetAttribute("value").Trim(), Is.EqualTo("ketjona.mema@kreatx.com"));
+        Assert.That(wait.Until(ExpectedConditions.ElementIsVisible(By.Name("phoneNumber"))).GetAttribute("value").Trim(), Is.EqualTo("0676041404"));
+
+        Log("Kliko Vazhdo buton");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
+
+        Log("Assert Step3 title");
+        IWebElement Step3Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/h4")));
+        Assert.That(Step3Title.Text.Trim(), Is.EqualTo("INFORMACION SPECIFIK MBI APLIKIMIN"));
+
+        Log("Plotëso fushat e kërkuara me vlera unike dhe vazhdo");
+        string uniqueChassis = "FAIL09" + DateTime.Now.ToString("yyyyMMddHHmmss");
+        string uniquePlate = "PL09" + DateTime.Now.ToString("HHmmss");
+        Log($"chassisNr unik për stimulim FAIL: {uniqueChassis}, plate: {uniquePlate}");
+        driver.FindElement(By.Name("chassisNr")).SendKeys(uniqueChassis);
+        driver.FindElement(By.Name("plate")).SendKeys(uniquePlate);
+        new SelectElement(driver.FindElement(By.Name("vehicleType"))).SelectByValue("M");
+
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
+
+        Log("Assert Step4 title");
+        IWebElement Step4Title = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("/html/body/div/main/div[3]/div/div/div/div/h4")));
+        Assert.That(Step4Title.Text.Trim(), Is.EqualTo("DOKUMENTACIONI"));
+
+        Log("STIMULIM FAIL: detektim i dokumenteve dhe checkbox-it në hapin DOKUMENTACIONI.");
+        Thread.Sleep(1500);
+
+        bool hasDocuments = HasVisibleFileInput();
+        bool hasCheckbox = FindVisibleConsentCheckbox() is not null;
+
+        if (!hasDocuments && !hasCheckbox)
+        {
+            Log("S'ka dokumente të detyrueshme as checkbox — klikohet 'Dërgo' pa to (stimulim FAIL).");
+        }
+        else if (hasCheckbox)
+        {
+            Log("Ka checkbox — NUK klikohet qëllimisht (stimulim FAIL).");
+        }
+
+        Log("Kliko Dergo Button");
+        ClickDerghoAfterDocumentationReady();
+        DpshtrrFailCaseSupport.AssertInformationalFailAfterDergo(driver, Log);
+    }
+
+    [Test]
+    public void Ndryshim_Gjeneralitetesh_FailCase_GjendjaCivile_ReturnsGabimPopup()
+    {
+        const string expectedNid = "J55728107H";
+        const string expectedDescription =
+            "Nuk u arrit të merren të dhënat nga Gjendja Civile. Ju lutemi provoni përsëri më vonë.";
+
+        string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
+        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div/div/div/div/div/div/button/div";
+        string titleXpath = "/html/body/div/main/div[3]/div/div/div/div/h4";
+
+        Log("Open website");
+        driver.Navigate().GoToUrl("http://141.95.84.12:8080/");
+
+        Log("Click service button");
+        wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath(serviceButtonXpath))).Click();
+
+        Log($"Fill form (10109, NID {expectedNid} për stimulim Gabim nga Gjendja Civile)");
+        driver.FindElement(By.Id("Nid")).SendKeys(expectedNid);
+        driver.FindElement(By.Id("ServiceCode")).SendKeys("10109");
+        driver.FindElement(By.Id("MicroserviceName")).SendKeys("dpshtrr-merge-not-ams_refactor");
+        driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
+        driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
+        driver.FindElement(By.Id("PhoneNumber")).SendKeys("0676041404");
+
+        new SelectElement(driver.FindElement(By.Id("ProfileType"))).SelectByValue("Individual");
+        new SelectElement(driver.FindElement(By.Id("Platform"))).SelectByValue("WEB");
+
+        Log("Click LOAD SERVICE");
+        driver.FindElement(By.ClassName("load-button")).Click();
+        Thread.Sleep(3000);
+
+        Log("Click Aplikimi i Ri");
+        SafeClick(By.XPath(aplikimiRiXpath));
+        Thread.Sleep(3000);
+
+        Log("Assert Title");
+        IWebElement titleElement = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(titleXpath)));
+        Assert.That(titleElement.Displayed, Is.True, "Titulli nuk eshte visible");
+
+        Log("Zgjidh te dhenat mbi Drejtorine Rajonale");
+        SelectByValueSafe(By.Name("rajoni"), "346f9d39-16dd-4000-a53d-b8b49a30d210");
+        SelectByValueSafe(By.Name("bashkia"), "56");
+        SelectByValueSafe(By.Name("njesiaAdm"), "375");
+        SelectByValueSafe(By.Name("nenNjesia"), "3323");
+
+        Log("Kliko Vazhdo (hapi i të dhënave të aplikantit)");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
+
+        DpshtrrFailCaseSupport.AssertExpectedGabimPopup(
+            driver, wait, Log, "Gabim", expectedDescription, "Gjendja Civile");
+    }
+
+    [Test]
+    public void Ndryshim_Gjeneralitetesh_FailCase_Qkb_ReturnsGabimPopup()
+    {
+        const string expectedNid = "M55555555E";
+        const string expectedDescription =
+            "Nuk u arrit të merren të dhënat nga QKB. Ju lutemi provoni përsëri më vonë.";
+
+        string serviceButtonXpath = "/html/body/div/main/div/div[1]/div/a";
+        string aplikimiRiXpath = "/html/body/div/main/div[3]/div/div/div/div/div/div/div/div/button/div";
+        string titleXpath = "/html/body/div/main/div[3]/div/div/div/div/h4";
+
+        Log("Open website");
+        driver.Navigate().GoToUrl("http://141.95.84.12:8080/");
+
+        Log("Click service button");
+        wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath(serviceButtonXpath))).Click();
+
+        Log($"Fill form (10109, NID {expectedNid}, ProfileType Organisation për stimulim Gabim nga QKB)");
+        driver.FindElement(By.Id("Nid")).SendKeys(expectedNid);
+        driver.FindElement(By.Id("ServiceCode")).SendKeys("10109");
+        driver.FindElement(By.Id("MicroserviceName")).SendKeys("dpshtrr-merge-not-ams_refactor");
+        driver.FindElement(By.Id("UserName")).SendKeys("Ketjona");
+        driver.FindElement(By.Id("Email")).SendKeys("ketjona.mema@kreatx.com");
+        driver.FindElement(By.Id("PhoneNumber")).SendKeys("0676041404");
+
+        new SelectElement(driver.FindElement(By.Id("ProfileType"))).SelectByValue("Organisation");
+        new SelectElement(driver.FindElement(By.Id("Platform"))).SelectByValue("WEB");
+
+        Log("Click LOAD SERVICE");
+        driver.FindElement(By.ClassName("load-button")).Click();
+        Thread.Sleep(3000);
+
+        Log("Click Aplikimi i Ri");
+        SafeClick(By.XPath(aplikimiRiXpath));
+        Thread.Sleep(3000);
+
+        Log("Assert Title");
+        IWebElement titleElement = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(titleXpath)));
+        Assert.That(titleElement.Displayed, Is.True, "Titulli nuk eshte visible");
+
+        Log("Zgjidh te dhenat mbi Drejtorine Rajonale");
+        SelectByValueSafe(By.Name("rajoni"), "346f9d39-16dd-4000-a53d-b8b49a30d210");
+        SelectByValueSafe(By.Name("bashkia"), "56");
+        SelectByValueSafe(By.Name("njesiaAdm"), "375");
+        SelectByValueSafe(By.Name("nenNjesia"), "3323");
+
+        Log("Kliko Vazhdo (hapi i të dhënave të aplikantit)");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
+
+        DpshtrrFailCaseSupport.AssertExpectedGabimPopup(
+            driver, wait, Log, "Gabim", expectedDescription, "Qendra Kombëtare e Biznesit");
+    }
+
+    private bool HasVisibleFileInput()
+    {
+        try
+        {
+            foreach (var input in driver.FindElements(By.CssSelector("input[type='file']")))
+            {
+                try
+                {
+                    if (input.Displayed)
+                        return true;
+                }
+                catch (StaleElementReferenceException)
+                {
+                }
+            }
+
+            foreach (var host in driver.FindElements(By.TagName("document-upload")))
+            {
+                try
+                {
+                    if (!host.Displayed)
+                        continue;
+                    if (host.GetShadowRoot().FindElements(By.CssSelector("input[type='file']")).Count > 0)
+                        return true;
+                }
+                catch (InvalidOperationException)
+                {
+                }
+                catch (StaleElementReferenceException)
+                {
+                }
+                catch (WebDriverException)
+                {
+                }
+            }
+        }
+        catch (WebDriverException)
+        {
+        }
+
+        return false;
+    }
+
+    private IWebElement? FindVisibleConsentCheckbox()
+    {
+        By[] locators =
+        {
+            By.Id("agreeCheck"),
+            By.Id("consentCheckbox"),
+            By.Id("confirmAdminDocuments"),
+            By.CssSelector("input[type='checkbox']")
+        };
+
+        foreach (By locator in locators)
+        {
+            try
+            {
+                foreach (var el in driver.FindElements(locator))
+                {
+                    try
+                    {
+                        string id = el.GetAttribute("id") ?? string.Empty;
+                        if (string.Equals(id, "toggleFormCheckbox", StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        if (el.Displayed)
+                            return el;
+                    }
+                    catch (StaleElementReferenceException)
+                    {
+                    }
+                }
+            }
+            catch (WebDriverException)
+            {
+            }
+        }
+
+        return null;
+    }
+}
