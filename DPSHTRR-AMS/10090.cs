@@ -333,6 +333,201 @@ public class _10090_
         return element;
     }
 
+    private IWebElement FindDerghoButtonInMain()
+    {
+        var candidates = driver.FindElements(
+            By.XPath("//main//button[contains(normalize-space(.), 'Dërgo') or contains(normalize-space(.), 'Dergo')]"));
+        IWebElement pick = candidates.LastOrDefault(e =>
+        {
+            try
+            {
+                return e.Displayed;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+        });
+        if (pick == null && candidates.Count > 0)
+            pick = candidates[candidates.Count - 1];
+        if (pick == null)
+            throw new NoSuchElementException("Nuk u gjet butoni 'Dërgo' brenda main.");
+        return pick;
+    }
+
+    private void ClickDerghoAfterDocumentationReady()
+    {
+        var sendWait = new WebDriverWait(driver, TimeSpan.FromSeconds(45));
+        sendWait.Until(drv =>
+        {
+            try
+            {
+                var b = FindDerghoButtonInMain();
+                return b.Displayed && b.Enabled;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        });
+
+        IWebElement dergo = FindDerghoButtonInMain();
+        ((IJavaScriptExecutor)driver).ExecuteScript(
+            "arguments[0].scrollIntoView({block:'center', inline:'nearest'});",
+            dergo);
+        Thread.Sleep(400);
+        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", dergo);
+        Log("Klikuar butoni 'Dërgo' (JavaScript click pasi u aktivizua).");
+    }
+
+    private bool TryClickOptionalAgreeCheckbox()
+    {
+        By[] locators =
+        {
+            By.Id("agreeCheck"),
+            By.Id("consentCheckbox"),
+            By.XPath("//main//input[@type='checkbox' and not(@disabled)]"),
+            By.XPath("//main//span[contains(.,'deklarativ') or contains(.,'pajtohem') or contains(.,'Pajtohem')]"),
+            By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[2]/div/span")
+        };
+
+        foreach (By by in locators)
+        {
+            try
+            {
+                var el = driver.FindElements(by).FirstOrDefault(e =>
+                {
+                    try { return e.Displayed; }
+                    catch (StaleElementReferenceException) { return false; }
+                });
+                if (el == null)
+                    continue;
+
+                ((IJavaScriptExecutor)driver).ExecuteScript(
+                    "arguments[0].scrollIntoView({block:'center'});", el);
+                Thread.Sleep(400);
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", el);
+                Log("U klikua checkbox deklarativ/agree (opsional).");
+                Thread.Sleep(800);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log("TryClickOptionalAgreeCheckbox: " + ex.Message);
+            }
+        }
+
+        Log("Nuk u gjet checkbox deklarativ — vazhdohet me Dërgo.");
+        return false;
+    }
+
+    private void AssertSuccessOrKujdesAfterDergo()
+    {
+        const string successHeadline = "APLIKIMI JUAJ U DËRGUA ME SUKSES.";
+        const string alertExpectedTitle = "Kujdes";
+        const string alertExpectedDescription =
+            "Ekzistojne aplikime te pa perfunduara per kete mjet.";
+
+        By successHeadlineBy = By.XPath(
+            "//h5[contains(normalize-space(.),'APLIKIMI JUAJ U DËRGUA ME SUKSES')]");
+        By alertModalBy = By.CssSelector(".alert-modal-container");
+
+        string outcome = null;
+        try
+        {
+            outcome = new WebDriverWait(driver, TimeSpan.FromSeconds(20)).Until(drv =>
+            {
+                try
+                {
+                    var successEls = drv.FindElements(successHeadlineBy);
+                    if (successEls.Any(e =>
+                    {
+                        try { return e.Displayed; }
+                        catch (StaleElementReferenceException) { return false; }
+                    }))
+                        return "success";
+                }
+                catch (StaleElementReferenceException)
+                {
+                }
+
+                try
+                {
+                    var alertEls = drv.FindElements(alertModalBy);
+                    if (alertEls.Any(e =>
+                    {
+                        try { return e.Displayed; }
+                        catch (StaleElementReferenceException) { return false; }
+                    }))
+                        return "alert";
+                }
+                catch (StaleElementReferenceException)
+                {
+                }
+
+                return null;
+            });
+        }
+        catch (WebDriverTimeoutException)
+        {
+        }
+
+        if (outcome == "success")
+        {
+            Log("Pas 'Dërgo' u shfaq ekrani i suksesit.");
+            IWebElement headline = wait.Until(ExpectedConditions.ElementIsVisible(successHeadlineBy));
+            Assert.That(headline.Text.Trim(), Does.Contain(successHeadline).IgnoreCase);
+
+            IWebElement referenceLine = wait.Until(ExpectedConditions.ElementIsVisible(
+                By.XPath("//h6[contains(normalize-space(.),'Numri referencë i aplikimit')]")));
+            Assert.That(
+                referenceLine.Text.Trim(),
+                Does.Contain("Numri referencë i aplikimit është:").IgnoreCase);
+            Assert.That(
+                referenceLine.Text.Trim(),
+                Does.Match("(?i)eALB-\\d+"));
+
+            IWebElement trackBtn = wait.Until(ExpectedConditions.ElementIsVisible(
+                By.XPath("//button[contains(normalize-space(.),'GJURMO APLIKIMIN')]")));
+            Assert.That(trackBtn.Displayed, Is.True);
+            Log("Sukses i verifikuar: headline, referenca eALB dhe butoni GJURMO APLIKIMIN.");
+        }
+        else if (outcome == "alert")
+        {
+            Log("Aplikimi u dërgua: sistemi u përgjigj dhe u shfaq modal paralajmërimi 'Kujdes'.");
+            IWebElement alertModal = driver.FindElement(alertModalBy);
+            IWebElement modalTitle = alertModal.FindElement(By.CssSelector("h2.alert-modal-title"));
+            IWebElement modalDesc = alertModal.FindElement(By.CssSelector(".alert-modal-description"));
+            Assert.That(modalTitle.Text.Trim(), Is.EqualTo(alertExpectedTitle));
+            Assert.That(modalDesc.Text.Trim(), Is.EqualTo(alertExpectedDescription));
+
+            IWebElement mbyllBtn = alertModal.FindElement(
+                By.CssSelector("button.alert-modal-button--primary"));
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "arguments[0].scrollIntoView({block:'center'});",
+                mbyllBtn);
+            Thread.Sleep(300);
+            try
+            {
+                mbyllBtn.Click();
+            }
+            catch (ElementClickInterceptedException)
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", mbyllBtn);
+            }
+        }
+        else
+        {
+            Assert.Fail(
+                "Pas 'Dërgo' nuk u shfaq as ekrani i suksesit ('APLIKIMI JUAJ U DËRGUA ME SUKSES.') " +
+                "as modal paralajmërimi 'Kujdes' (.alert-modal-container).");
+        }
+    }
+
     [Test]
     public void RipajisjeDAP()
     {
@@ -483,19 +678,28 @@ public class _10090_
         RemoveAllUploadedDocs();
         Thread.Sleep(1500);
 
+        Log("Prit 1 minutë para ngarkimit të dokumenteve të sakta…");
+        Thread.Sleep(TimeSpan.FromMinutes(1));
+
         Log("Ngarko dokumente e sakte");
-        DAP = @"C:\Users\Kreatx\Downloads\TEST.pdf";
-        
-
+        const string signedPdfPath = @"C:\Users\Kreatx\Downloads\Signed_TEST_signed.pdf";
+        DAP = signedPdfPath;
         Assert.That(File.Exists(DAP), Is.True, "File DAP nuk ekziston.");
-
 
         IWebElement DAPInput = wait.Until(
             ExpectedConditions.ElementExists(
                 By.XPath("//div[contains(.,'DAP-i që dispononi*')]/following::input[@type='file'][1]"))
         );
         DAPInput.SendKeys(DAP);
+        Thread.Sleep(2000);
 
+        Log("Kliko checkbox (nëse ekziston)");
+        TryClickOptionalAgreeCheckbox();
+
+        Log("Kliko Dergo Button");
+        ClickDerghoAfterDocumentationReady();
+
+        AssertSuccessOrKujdesAfterDergo();
 
         Log("TEST PASSED");
     }

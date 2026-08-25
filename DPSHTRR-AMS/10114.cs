@@ -333,6 +333,321 @@ public class _10114_
         return element;
     }
 
+    private IWebElement FindDerghoButtonInMain()
+    {
+        var candidates = driver.FindElements(
+            By.XPath("//main//button[contains(normalize-space(.), 'Dërgo') or contains(normalize-space(.), 'Dergo')]"));
+        IWebElement pick = candidates.LastOrDefault(e =>
+        {
+            try
+            {
+                return e.Displayed;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+        });
+        if (pick == null && candidates.Count > 0)
+            pick = candidates[candidates.Count - 1];
+        if (pick == null)
+            throw new NoSuchElementException("Nuk u gjet butoni 'Dërgo' brenda main.");
+        return pick;
+    }
+
+    private void ClickDerghoAfterDocumentationReady()
+    {
+        var sendWait = new WebDriverWait(driver, TimeSpan.FromSeconds(45));
+        sendWait.Until(drv =>
+        {
+            try
+            {
+                var b = FindDerghoButtonInMain();
+                return b.Displayed && b.Enabled;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return false;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        });
+
+        IWebElement dergo = FindDerghoButtonInMain();
+        ((IJavaScriptExecutor)driver).ExecuteScript(
+            "arguments[0].scrollIntoView({block:'center', inline:'nearest'});",
+            dergo);
+        Thread.Sleep(400);
+        ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", dergo);
+        Log("Klikuar butoni 'Dërgo' (JavaScript click pasi u aktivizua).");
+    }
+
+    private bool TryClickOptionalAgreeCheckbox()
+    {
+        By[] locators =
+        {
+            By.Id("agreeCheck"),
+            By.Id("consentCheckbox"),
+            By.XPath("//main//input[@type='checkbox' and not(@disabled)]"),
+            By.XPath("//main//span[contains(.,'deklarativ') or contains(.,'pajtohem') or contains(.,'Pajtohem')]"),
+            By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/div[2]/div/span")
+        };
+
+        foreach (By by in locators)
+        {
+            try
+            {
+                var el = driver.FindElements(by).FirstOrDefault(e =>
+                {
+                    try { return e.Displayed; }
+                    catch (StaleElementReferenceException) { return false; }
+                });
+                if (el == null)
+                    continue;
+
+                ((IJavaScriptExecutor)driver).ExecuteScript(
+                    "arguments[0].scrollIntoView({block:'center'});", el);
+                Thread.Sleep(400);
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", el);
+                Log("U klikua checkbox deklarativ/agree (opsional).");
+                Thread.Sleep(800);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log("TryClickOptionalAgreeCheckbox: " + ex.Message);
+            }
+        }
+
+        Log("Nuk u gjet checkbox deklarativ — vazhdohet me Dërgo.");
+        return false;
+    }
+
+    private IWebElement FindDocumentUploadFileInput()
+    {
+        wait.Until(drv =>
+        {
+            foreach (var host in drv.FindElements(By.TagName("document-upload")))
+            {
+                try
+                {
+                    if (host.GetShadowRoot().FindElements(By.CssSelector("input[type='file']")).Count > 0)
+                        return true;
+                }
+                catch (InvalidOperationException) { }
+                catch (StaleElementReferenceException) { }
+                catch (WebDriverException) { }
+            }
+
+            return drv.FindElements(By.CssSelector("main input[type='file']")).Count > 0;
+        });
+
+        foreach (var host in driver.FindElements(By.TagName("document-upload")))
+        {
+            try
+            {
+                var inputs = host.GetShadowRoot().FindElements(By.CssSelector("input[type='file']"));
+                if (inputs.Count > 0)
+                    return inputs[0];
+            }
+            catch (InvalidOperationException) { }
+            catch (StaleElementReferenceException) { }
+            catch (WebDriverException) { }
+        }
+
+        return wait.Until(ExpectedConditions.ElementExists(By.CssSelector("main input[type='file']")));
+    }
+
+    private void UploadSignedPdfOnDocumentationStep()
+    {
+        const string signedPdfPath = @"C:\Users\Kreatx\Downloads\Signed_TEST_signed.pdf";
+        Assert.That(File.Exists(signedPdfPath), Is.True, $"Skedari PDF nuk ekziston: {signedPdfPath}");
+
+        Log("Prit 1 minutë para ngarkimit të dokumenteve të sakta…");
+        Thread.Sleep(TimeSpan.FromMinutes(1));
+
+        Log("Ngarko Signed_TEST_signed.pdf (document-upload ose label)");
+        bool uploaded = false;
+
+        var hosts = driver.FindElements(By.TagName("document-upload"));
+        Log($"document-upload hosts: {hosts.Count}");
+        foreach (var host in hosts)
+        {
+            try
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript(
+                    "arguments[0].scrollIntoView({block:'center'});", host);
+                Thread.Sleep(300);
+                var inputs = host.GetShadowRoot().FindElements(By.CssSelector("input[type='file']"));
+                if (inputs.Count == 0)
+                    continue;
+                inputs[0].SendKeys(signedPdfPath);
+                uploaded = true;
+                Thread.Sleep(1500);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        if (!uploaded)
+        {
+            var labelInputs = driver.FindElements(By.XPath("//main//input[@type='file']"));
+            foreach (var input in labelInputs)
+            {
+                try
+                {
+                    input.SendKeys(signedPdfPath);
+                    uploaded = true;
+                    Thread.Sleep(1500);
+                    break;
+                }
+                catch (Exception)
+                {
+                }
+            }
+        }
+
+        if (!uploaded)
+        {
+            FindDocumentUploadFileInput().SendKeys(signedPdfPath);
+            Thread.Sleep(2000);
+        }
+    }
+
+    private void AssertSuccessOrKujdesAfterDergo()
+    {
+        const string successHeadline = "APLIKIMI JUAJ U DËRGUA ME SUKSES.";
+        const string alertExpectedTitle = "Kujdes";
+        const string alertExpectedDescription =
+            "Ekzistojne aplikime te pa perfunduara per kete mjet.";
+
+        By successHeadlineBy = By.XPath(
+            "//h5[contains(normalize-space(.),'APLIKIMI JUAJ U DËRGUA ME SUKSES')]");
+        By alertModalBy = By.CssSelector(".alert-modal-container");
+
+        string outcome = null;
+        try
+        {
+            outcome = new WebDriverWait(driver, TimeSpan.FromSeconds(20)).Until(drv =>
+            {
+                try
+                {
+                    var successEls = drv.FindElements(successHeadlineBy);
+                    if (successEls.Any(e =>
+                    {
+                        try { return e.Displayed; }
+                        catch (StaleElementReferenceException) { return false; }
+                    }))
+                        return "success";
+                }
+                catch (StaleElementReferenceException)
+                {
+                }
+
+                try
+                {
+                    var alertEls = drv.FindElements(alertModalBy);
+                    if (alertEls.Any(e =>
+                    {
+                        try { return e.Displayed; }
+                        catch (StaleElementReferenceException) { return false; }
+                    }))
+                        return "alert";
+                }
+                catch (StaleElementReferenceException)
+                {
+                }
+
+                return null;
+            });
+        }
+        catch (WebDriverTimeoutException)
+        {
+        }
+
+        if (outcome == "success")
+        {
+            Log("Pas 'Dërgo' u shfaq ekrani i suksesit.");
+            IWebElement headline = wait.Until(ExpectedConditions.ElementIsVisible(successHeadlineBy));
+            Assert.That(headline.Text.Trim(), Does.Contain(successHeadline).IgnoreCase);
+
+            IWebElement referenceLine = wait.Until(ExpectedConditions.ElementIsVisible(
+                By.XPath("//h6[contains(normalize-space(.),'Numri referencë i aplikimit')]")));
+            Assert.That(
+                referenceLine.Text.Trim(),
+                Does.Contain("Numri referencë i aplikimit është:").IgnoreCase);
+            Assert.That(
+                referenceLine.Text.Trim(),
+                Does.Match("(?i)eALB-\\d+"));
+
+            IWebElement trackBtn = wait.Until(ExpectedConditions.ElementIsVisible(
+                By.XPath("//button[contains(normalize-space(.),'GJURMO APLIKIMIN')]")));
+            Assert.That(trackBtn.Displayed, Is.True);
+            Log("Sukses i verifikuar: headline, referenca eALB dhe butoni GJURMO APLIKIMIN.");
+        }
+        else if (outcome == "alert")
+        {
+            Log("Aplikimi u dërgua: sistemi u përgjigj dhe u shfaq modal paralajmërimi 'Kujdes'.");
+            IWebElement alertModal = driver.FindElement(alertModalBy);
+            IWebElement modalTitle = alertModal.FindElement(By.CssSelector("h2.alert-modal-title"));
+            IWebElement modalDesc = alertModal.FindElement(By.CssSelector(".alert-modal-description"));
+            Assert.That(modalTitle.Text.Trim(), Is.EqualTo(alertExpectedTitle));
+            Assert.That(modalDesc.Text.Trim(), Is.EqualTo(alertExpectedDescription));
+
+            IWebElement mbyllBtn = alertModal.FindElement(
+                By.CssSelector("button.alert-modal-button--primary"));
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "arguments[0].scrollIntoView({block:'center'});",
+                mbyllBtn);
+            Thread.Sleep(300);
+            try
+            {
+                mbyllBtn.Click();
+            }
+            catch (ElementClickInterceptedException)
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", mbyllBtn);
+            }
+        }
+        else
+        {
+            Assert.Fail(
+                "Pas 'Dërgo' nuk u shfaq as ekrani i suksesit ('APLIKIMI JUAJ U DËRGUA ME SUKSES.') " +
+                "as modal paralajmërimi 'Kujdes' (.alert-modal-container).");
+        }
+    }
+
+    private string ReadVisibleMainTitle()
+    {
+        foreach (var by in new[]
+        {
+            By.XPath("//main//h4"),
+            By.XPath("//main//h5"),
+            By.XPath("/html/body/div/main/div[3]/div/div/div/div/h4"),
+            By.XPath("/html/body/div/main/div[3]/div/div/div/div/h5")
+        })
+        {
+            try
+            {
+                var el = driver.FindElements(by).FirstOrDefault(e =>
+                {
+                    try { return e.Displayed && !string.IsNullOrWhiteSpace(e.Text); }
+                    catch { return false; }
+                });
+                if (el != null)
+                    return el.Text.Trim();
+            }
+            catch
+            {
+            }
+        }
+
+        return string.Empty;
+    }
+
     [Test]
     public void TransferimDosje()
 
@@ -434,6 +749,40 @@ public class _10114_
 
         Thread.Sleep(1000);
 
+        Log("Kliko Vazhdo për të kaluar te DOKUMENTACIONI (nëse ekziston)");
+        SafeClick(By.XPath("/html/body/div/main/div[3]/div/div/div/div/div[2]/button[2]"));
+        Thread.Sleep(4000);
+
+        string afterStep3Title = ReadVisibleMainTitle();
+        Log("Titulli pas motiviKerkeses: '" + afterStep3Title + "'");
+
+        bool onDokumentacioni =
+            afterStep3Title.IndexOf("DOKUMENTACIONI", StringComparison.OrdinalIgnoreCase) >= 0
+            || driver.FindElements(By.TagName("document-upload")).Count > 0
+            || driver.FindElements(By.CssSelector("main input[type='file']")).Count > 0;
+
+        if (onDokumentacioni)
+        {
+            Log("U arrit DOKUMENTACIONI — ngarko Signed PDF + checkbox + Dërgo.");
+            UploadSignedPdfOnDocumentationStep();
+            TryClickOptionalAgreeCheckbox();
+            ClickDerghoAfterDocumentationReady();
+            AssertSuccessOrKujdesAfterDergo();
+        }
+        else
+        {
+            Log("Nuk u gjet DOKUMENTACIONI — provo Dërgo nëse ekziston në këtë hap.");
+            try
+            {
+                TryClickOptionalAgreeCheckbox();
+                ClickDerghoAfterDocumentationReady();
+                AssertSuccessOrKujdesAfterDergo();
+            }
+            catch (NoSuchElementException ex)
+            {
+                Assert.Fail("Pas motiviKerkeses nuk u gjet as DOKUMENTACIONI as butoni Dërgo: " + ex.Message);
+            }
+        }
 
         Log("TEST PASSED");
     }
